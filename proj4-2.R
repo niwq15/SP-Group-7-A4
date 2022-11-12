@@ -68,7 +68,7 @@ eigensH <- eigen(hess)$values
 
 ## check if hessian is positive definite
 # for positive definite all eigenvalues greater than 0
-if (any(abs(eigensH) <= 0)){
+if (any(eigensH <= 0)){
   
   print("Hessian not positive definite")
   # change this print to a return in the function
@@ -82,5 +82,5 @@ if (any(abs(eigensH) <= 0)){
   Hi <- backsolve(chess,forwardsolve(t(chess),diag(c(rep(1,length(eigensH))))))
   
   print(Hi)
-  # remove this print in the function
+  # remove this print in the function, result can be checked with solve(hess)
 }

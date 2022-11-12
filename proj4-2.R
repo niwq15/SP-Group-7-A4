@@ -53,17 +53,6 @@ newt <- function(theta,
     ##make sure the matrix is symmetric
     Hfd <- (t(Hfd)+Hfd)/2
     
-    ## assign to hess
-    hess <- Hfd #? does this work?
-    
   }## now we have Hfd, an approximate Hessian matrix
   
-  eigensH <- eigen(hess)$values
-  
-  # check if hessian is positive definite, if not then not a minimum
-  # if any eigenvalue of the hessian is 0 then det(H) = 0 so not invertible. 
-  if (any(eigensH <= 0)){
-    return("Hessian not positive definite")
-  }
-   
 }

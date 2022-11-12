@@ -33,12 +33,21 @@ newt <- function(theta,
   ## If the Hessian matrix is not supplied, we use an approximation by finite
   ## differencing of the gradient vector
   if (hess=NULL) {
-    len <- length(gradval) ## the length of the gradient vector
-    Hfd <- matrix(0, len,len) ## finite difference Hessian
+    ## the length of the gradient vector
+    len <- length(gradval) 
+    
+    ## finite difference Hessian
+    Hfd <- matrix(0, len,len)
+    
     for (i in 1:length(theta)) {## loop over parameters
-      th1 <- theta; th1[i] <- th1[i]+ eps ## increase th1[i] by eps
-      grad1 <- grad(th1,...) ## compute resulting derivative values
-      Hfd[i,] <- (grad1 - gradval)/eps ## approximate -dl/dth[i]
+      ## increase th1[i] by eps
+      th1 <- theta; th1[i] <- th1[i]+ eps 
+      
+      ## compute resulting derivative values
+      grad1 <- grad(th1,...)
+      
+      ## approximate -dl/dth[i]
+      Hfd[i,] <- (grad1 - gradval)/eps 
     }
     
     ##make sure the matrix is symmetric

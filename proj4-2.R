@@ -56,3 +56,31 @@ newt <- function(theta,
   }## now we have Hfd, an approximate Hessian matrix
   
 }
+
+
+
+### Hessian inverse test
+# create hessian
+hess <- array(c(3,0,1,0,3,0,1,0,3),dim=c(3,3))
+
+# save eigenvalues
+eigensH <- eigen(hess)$values
+
+## check if hessian is positive definite
+# for positive definite all eigenvalues greater than 0
+if (any(abs(eigensH) <= 0)){
+  
+  print("Hessian not positive definite")
+  # change this print to a return in the function
+  
+} else {
+  
+  # assign cholesky upper triangle
+  chess <- chol(hess)
+  
+  # assign the hessian inverse (from notes)
+  Hi <- backsolve(chess,forwardsolve(t(chess),diag(c(rep(1,length(eigensH))))))
+  
+  print(Hi)
+  # remove this print in the function
+}

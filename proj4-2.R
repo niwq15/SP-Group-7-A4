@@ -24,7 +24,7 @@ newt <- function(theta,
     return("The objective function is not finite at the initial theta value.") 
   }
   
-  if (is.finite(gradval)==FALSE) {
+  if (any(is.finite(gradval)==FALSE)) {
     break
     return("The derivatives are not finite at the initial theta value.") 
   }
@@ -32,7 +32,7 @@ newt <- function(theta,
   ## If the objective or derivatives are finite, do the following steps.
   ## If the Hessian matrix is not supplied, we use an approximation by finite
   ## differencing of the gradient vector
-  if (hess=NULL) {
+  if (is.null(hess)) {
     ## the length of the gradient vector
     len <- length(gradval) 
     
@@ -52,11 +52,65 @@ newt <- function(theta,
     
     ##make sure the matrix is symmetric
     Hfd <- (t(Hfd)+Hfd)/2
+  }
     
-  }## now we have Hfd, an approximate Hessian matrix
+  ## now we have Hfd, an approximate Hessian matrix
   
+  ## empty vector to store the points
+  xval <- c() 
+  
+  ## use the 'theta' values as initial x0
+  xval[1] <- func(theta)
+  
+  ## loop over 2 to max iterations
+  for (i in 2:maxit) {
+    gradval <- grad(xval[i-1])
+    
+    ## cholesky decomposition to get hessian inverse
+    chess <- chol(hess(xval[i-1]))
+    Hi <- backsolve(chess,forwardsolve(t(chess),diag(rep(1,len))))
+    
+    ## use formula
+    xval[i] <- xval[i-1] - gradval %*% Hi
+    
+    ## if the step fails to reduce the objective
+    if (xval[i]-xval[i-1]>0) {
+      
+      xval[i] <- xval[i-1] - (1/2)*gradval %*% Hi
+    }
+    
+    ## If we have an answer close enough to last time then stop
+    if ( xval[i]-xval[i-1] < tol) {
+      
+      ## get final values
+      theta <- xval[i]
+      f <- func(theta, ...)
+      g <- grad(theta, ...)
+      chess <- chol(hess(xval[i]))
+      Hi <- backsolve(chess,forwardsolve(chess,diag(rep(1,len))))
+      
+      return(f, theta, iter, g, Hi)
+    }
+  }
 }
 
+
+
+rb <- function(th,k=2) {
+  k*(th[2]-th[1]^2)^2 + (1-th[1])^2
+}
+
+gb <- function(th,k=2) {
+  c(-2*(1-th[1])-k*4*th[1]*(th[2]-th[1]^2),k*2*(th[2]-th[1]^2))
+}
+
+hb <- function(th,k=2) {
+  h <- matrix(0,2,2)
+  h[1,1] <- 2-k*2*(2*(th[2]-th[1]^2) - 4*th[1]^2)
+  h[2,2] <- 2*k
+  h[1,2] <- h[2,1] <- -4*k*th[1]
+  h
+}
 
 
 ### Hessian inverse test

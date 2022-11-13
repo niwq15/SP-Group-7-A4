@@ -60,34 +60,36 @@ newt <- function(theta,
   xval <- c() 
   
   ## use the 'theta' values as initial x0
-  xval[1] <- func(theta)
+  xval <- theta
+  len <- length(xval)
   
   ## loop over 2 to max iterations
   for (i in 2:maxit) {
-    gradval <- grad(xval[i-1])
+    gradval <- grad(xval)
     
     ## cholesky decomposition to get hessian inverse
-    chess <- chol(hess(xval[i-1]))
+    chess <- chol(hess(xval))
     Hi <- backsolve(chess,forwardsolve(t(chess),diag(rep(1,len))))
     
     ## use formula
-    xval[i] <- xval[i-1] - gradval %*% Hi
+    xvalcheck <- xval - Hi %*% gradval
     
     ## if the step fails to reduce the objective
-    if (xval[i]-xval[i-1]>0) {
+    while (norm(xvalcheck - xval,"F") > 0) {
       
-      xval[i] <- xval[i-1] - (1/2)*gradval %*% Hi
+      xvalcheck <- xval - (1/2) * Hi %*% gradval
     }
     
     ## If we have an answer close enough to last time then stop
-    if ( xval[i]-xval[i-1] < tol) {
+    if ( norm(xval - xvalcheck, "F") < tol) {
       
       ## get final values
-      theta <- xval[i]
+      theta <- xvalcheck
       f <- func(theta, ...)
       g <- grad(theta, ...)
-      chess <- chol(hess(xval[i]))
+      chess <- chol(hess(theta))
       Hi <- backsolve(chess,forwardsolve(chess,diag(rep(1,len))))
+      iter <- i
       
       return(f, theta, iter, g, Hi)
     }

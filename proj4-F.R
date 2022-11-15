@@ -20,7 +20,7 @@ newt <- function(theta, #this is our initial search point
 
   f <- func(theta,...) #Store the function, evaluated at the first setp theta
   
-  gradval <- grad(theta,...) # Store the graident vector evaluated at the first step theta 
+  gradval <- grad(theta,...) # Store the gradient vector evaluated at the first step theta 
   
   #Check that the function and gradient are continuous (smooth)
   #This is true when their values are finite 
@@ -29,10 +29,13 @@ newt <- function(theta, #this is our initial search point
     stop("The objective function is not finite at the starting point. \n 
           The function is not analytic.")
   }
-  if (is.finite(gradval)==FALSE) { #check the gradient at the start is real 
+  
+  
+  if ( any( is.finite( gradval ) == FALSE ) ) { #check the gradient at the start is real 
     stop("The gradient is not finite at the starting point. \n 
           The function is not analytic.")
   }
+  
   
   #If the Hessian is not supplied, calculate it through finite difference methods 
   
@@ -105,7 +108,7 @@ newt <- function(theta, #this is our initial search point
       f2 <- func(theta2,...) 
       
       if (n_half >= max.half ) { 
-        stop()
+        stop()}
       
       
     }
@@ -176,12 +179,75 @@ myfunc <- function(i){
   cat(i)
 }
 
-a<-myfunc(3)
+a <- myfunc(3)
 
 
 
 
 
+rb <- function(th,k=2) {
+  k*(th[2]-th[1]^2)^2 + (1-th[1])^2
+}
+
+gb <- function(th,k=2) {
+  c(-2*(1-th[1])-k*4*th[1]*(th[2]-th[1]^2),k*2*(th[2]-th[1]^2))
+}
+
+hb <- function(th,k=2) {
+  h <- matrix(0,2,2)
+  h[1,1] <- 2-k*2*(2*(th[2]-th[1]^2) - 4*th[1]^2)
+  h[2,2] <- 2*k
+  h[1,2] <- h[2,1] <- -4*k*th[1]
+  h
+}
+
+th <- c(0,0)
+
+rb(th)
+gb(th)
+hb(th)
+
+
+# First error works correctly 
+
+if (is.finite(Inf)==FALSE) { #check the function at the start point is real 
+  #When f is not real the function is not analytic. 
+  stop("The objective function is not finite at the starting point. \n 
+          The function is not analytic.")
+}
+
+if (is.finite(rb(th))==FALSE) { #check the function at the start point is real 
+  #When f is not real the function is not analytic. 
+  stop("The objective function is not finite at the starting point. \n 
+          The function is not analytic.")
+}
+
+
+# Second Error testing 
+
+
+if ( any( is.finite( gb(c(0,0)))) == FALSE ) { #check the gradient at the start is real 
+  stop("The gradient is not finite at the starting point. \n 
+          The function is not analytic.")
+}else{cat ("hi")}
+
+
+if ( any( is.finite( gb(c(Inf,0)))) == FALSE ) { #check the gradient at the start is real 
+  stop("The gradient is not finite at the starting point. \n 
+          The function is not analytic.")
+}else{cat ("hi")}
+
+#this config also works for the 2nd warning
+
+if ( any(is.finite(c(0, 0))==FALSE) ) { #check the gradient at the start is real 
+  stop("The gradient is not finite at the starting point. \n 
+          The function is not analytic.")
+}else{cat("ello")}
+
+if ( any(is.finite(gb(c(Inf, 0)))==FALSE) ) { #check the gradient at the start is real 
+  stop("The gradient is not finite at the starting point. \n 
+          The function is not analytic.")
+}
 
 
 

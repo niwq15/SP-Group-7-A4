@@ -29,34 +29,6 @@ newt <- function(theta,
     return("The derivatives are not finite at the initial theta value.") 
   }
   
-  ## If the objective or derivatives are finite, do the following steps.
-  ## If the Hessian matrix is not supplied, we use an approximation by finite
-  ## differencing of the gradient vector
-  if (is.null(hess)) {
-    ## the length of the gradient vector
-    len <- length(gradval) 
-    
-    ## finite difference Hessian
-    Hfd <- matrix(0, len,len)
-    
-    for (i in 1:length(theta)) {## loop over parameters
-      ## increase th1[i] by eps
-      th1 <- theta; th1[i] <- th1[i]+ eps 
-      
-      ## compute resulting derivative values
-      grad1 <- grad(th1,...)
-      
-      ## approximate -dl/dth[i]
-      Hfd[i,] <- (grad1 - gradval)/eps 
-    }
-    
-    ##make sure the matrix is symmetric
-    Hfd <- (t(Hfd)+Hfd)/2
-    hess <- Hfd
-  }
-    
-  ## now we have Hfd, an approximate Hessian matrix
-  
   ## use the 'theta' values as initial x0
   xval <- theta
   len <- length(xval)
@@ -65,8 +37,32 @@ newt <- function(theta,
   for (i in 2:maxit) {
     gradval <- grad(xval)
     
+    ## If the objective or derivatives are finite, do the following steps.
+    ## If the Hessian matrix is not supplied, we use an approximation by finite
+    ## differencing of the gradient vector
+    if (is.null(hess)) {
+      ## finite difference Hessian
+      Hfd <- matrix(0, len,len)
+      
+      for (i in 1:len) {## loop over parameters
+        ## increase th1[i] by eps
+        th1 <- xval; th1[i] <- th1[i]+ eps 
+        
+        ## compute resulting derivative values
+        grad1 <- grad(th1,...)
+        
+        ## approximate -dl/dth[i]
+        Hfd[i,] <- (grad1 - gradval)/eps 
+      }
+      
+      ##make sure the matrix is symmetric
+      Hfd <- (t(Hfd)+Hfd)/2
+      chess <- chol(Hfd)
+    } else {
+      chess <- chol(hess(xval))
+    }
+
     ## cholesky decomposition to get hessian inverse
-    chess <- chol(hess(xval))
     Hi <- backsolve(chess,forwardsolve(t(chess),diag(rep(1,len))))
     
     ## use formula
@@ -99,7 +95,27 @@ newt <- function(theta,
       theta <- xvalcheck
       f <- func(theta, ...)
       g <- grad(theta, ...)
+      if (is.null(hess)){
+        ## finite difference Hessian
+        Hfd <- matrix(0, len,len)
+        
+        for (i in 1:len) {## loop over parameters
+          ## increase th1[i] by eps
+          th1 <- xvalcheck; th1[i] <- th1[i]+ eps 
+          
+          ## compute resulting derivative values
+          grad1 <- grad(th1,...)
+          
+          ## approximate -dl/dth[i]
+          Hfd[i,] <- (grad1 - gradval)/eps 
+        }
+        
+        ##make sure the matrix is symmetric
+        Hfd <- (t(Hfd)+Hfd)/2
+        chess <- chol(Hfd)
+      } else {
       chess <- chol(hess(theta))
+      }
       Hi <- backsolve(chess,forwardsolve(chess,diag(rep(1,len))))
       iter <- i
       
@@ -116,7 +132,22 @@ newt <- function(theta,
 } ## end newt
 
 
+# x-squared function, or x^T x for n dimensional x. Works for any n.
+# should return 0 vector with a min of 0
+xtx <- function(x){
+  t(x) %*% x
+}
 
+xtxdiv <- function(x){
+  2*x
+}
+
+xtxhess <- function(x){
+  diag(2,length(x))
+}
+
+
+# Simon's example, should return (1,1) with a min of 0
 rb <- function(th,k=2) {
   k*(th[2]-th[1]^2)^2 + (1-th[1])^2
 }

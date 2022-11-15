@@ -36,7 +36,7 @@ newt <- function(theta, #this is our initial search point
   
   #If the Hessian is not supplied, calculate it through finite difference methods 
   
-  if (hess=NULL) { #no hessian supplied 
+  if (is.null(hess)) { #no hessian supplied 
     
     len <- length(gradval) # length of the gradient vector 
     
@@ -141,7 +141,7 @@ options(show.error.messages = TRUE, call. = FALSE)
 R <- try(chol(h) , stop("Hessian is not positive semi-definite at the minimum"))
 
 #Hessian Inverse hi - using cholesky (only works if chol works)
-hi <- chol2inv(chol(A))
+hi <- chol2inv(chol(h))
 
 
 

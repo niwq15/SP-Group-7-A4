@@ -43,10 +43,10 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   xval <- c() ## empty vector to store the points
   xval[1] <- theta ## use the 'theta' values as initial x0
   for (i in 2:maxit) {## the number of Newton iterations to try
-    xval[i] <- xval[i-1] - gradval/Hfd ## use the Newton's formula
+    xval[i] <- xval[i-1] - Hi%*%gradval ## use the Newton's formula
     
     if (xval[i]-xval[i-1]>0) {## if the step fails to reduce the objective
-      xval[i] <- xval[i-1] - (1/2)*gradval/Hfd
+      xval[i] <- xval[i-1] - (1/2)*Hi%*%gradval
     }
     
     if ( xval[i]-xval[i-1] < tol) {

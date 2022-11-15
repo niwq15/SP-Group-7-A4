@@ -10,13 +10,13 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     break
     return("The objective function is not finite at the initial theta value.") 
   }
-  if (is.finite(gradval)==FALSE) {
+  if (any(is.finite(gradval)==FALSE)) {## gradval is a vector
     break
     return("The derivatives are not finite at the initial theta value.") 
   }
   ## If the objective or derivatives are finite, do the following steps 
   ## If the Hessian matrix is not supplied, we use an approximation by finite differencing of the gradient vector
-  if (hess=NULL) {
+  if (hess==NULL) {
     len <- length(gradval) ## the length of the gradient vector 
     Hfd <- matrix(0, len,len) ## finite difference Hessian
     for (i in 1:length(theta)) {## loop over parameters
@@ -25,37 +25,51 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
       Hfd[i,] <- (grad1 - gradval)/eps ## approximate -dl/dth[i]
     }
     hess <- (t(Hfd)+Hfd)/2 ##make sure the matrix is symmetric and store into 'hess' for later use
-  }## now we have hess, an approximate Hessian matrix 
+  }## now we have Hfd, an approximate Hessian matrix
   
   ## Check if the (approximated) Hessian matrix is positive definite, if so, use Cholesky decomposition to calculate the inverse
   ## The hessian matrix is positive definite if it has only positive eigenvalues
   eigensH <- eigen(hess)$values ## caculate the eigenvalues of 'hess'
   if (any(eigensH <= 0)){## if there exists some non-positive eigenvalues
     
-    print("The Hessian is not positive definite.")
+    print("Warning: the Hessian is not positive definite.")
   } else {## if all the eigenvalues are positive
     
     chess <- chol(hess) ## solve with cholesky
     Hi <- backsolve(chess,forwardsolve(t(chess),diag(c(rep(1,length(eigensH)))))) ## calculate the hessian inverse
     ## print(Hi) ##result can be checked with solve(hess)
   }
+
+  ## After each try, if a better theta value is found, use 'theta' to store the value
+  n_iter <- 0; n_half <- 0
   
-  xval <- c() ## empty vector to store the points
-  xval[1] <- theta ## use the 'theta' values as initial x0
-  for (i in 2:maxit) {## the number of Newton iterations to try
-    xval[i] <- xval[i-1] - Hi%*%gradval ## use the Newton's formula
+  while (n_iter < maxit) {
+    theta2 <- theta - Hi%*%gradval ## use the Newton's formula
+    f2 <- func(theta2,...)
     
-    if (xval[i]-xval[i-1]>0) {## if the step fails to reduce the objective
-      xval[i] <- xval[i-1] - (1/2)*Hi%*%gradval
-    }
-    
-    if ( xval[i]-xval[i-1] < tol) {
-      theta <- xval[i]
-      f <- func(theta, ...)
-      g <- grad(theta, ...)
+    while (f2 > f) {
+      n_half <- n_half + 1 ## counter goes up
+      theta2 <-  theta - ( 0.5 ^(n_half) )*( Hi %*% gradval )
+      f2 <- func(theta2)
       
-      return(f, theta, iter, g, Hi)
+      if (n_half >= max.half) {
+        stop("The step fails to improve the objective")
+        ## should return the value corresponding to initial theta value
+      }
     }
-  }
-  
+    
+    while (f2 < f) {
+      n_iter <- n_iter + 1 ## count the number of iterations
+      bound <- tol*abs(f2)*fscale
+      if (any(abs(gradval)) < bound) {
+       theta <- theta2 ## use 'theta' to store the optimal theta value
+       f <- func(theta,...)
+       iter <- n_iter
+       g <- grad(theta,...) 
+       #Hi <- 
+       return(f, theta, iter, g, Hi)
+      }
+    }
+    }
+    
 }

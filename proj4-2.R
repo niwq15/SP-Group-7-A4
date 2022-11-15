@@ -11,6 +11,28 @@ newt <- function(theta,
                  maxit=100,
                  max.half=20,
                  eps=1e-6) {
+  ## create a function to approximate the hessian when no input is given
+  nullhess <- function(theta,grad,...,eps=1e-6){
+    
+    len <- length(theta)
+    Hfd <- matrix(0, len,len)
+    gradval <- grad(theta)
+    
+    for (i in 1:len) {## loop over parameters
+      ## increase th1[i] by eps
+      th1 <- theta; th1[i] <- th1[i]+ eps 
+      
+      ## compute resulting derivative values
+      grad1 <- grad(th1,...)
+      
+      ## approximate -dl/dth[i]
+      Hfd[i,] <- (grad1 - gradval)/eps 
+    }
+    
+    ## make sure the matrix is symmetric
+    Hfd <- (t(Hfd)+Hfd)/2
+    return(Hfd)
+  }
   ## use the 'func' function and 'theta' to get the objective function
   f <- func(theta,...) 
   
@@ -41,23 +63,9 @@ newt <- function(theta,
     ## If the Hessian matrix is not supplied, we use an approximation by finite
     ## differencing of the gradient vector
     if (is.null(hess)) {
-      ## finite difference Hessian
-      Hfd <- matrix(0, len,len)
-      
-      for (i in 1:len) {## loop over parameters
-        ## increase th1[i] by eps
-        th1 <- xval; th1[i] <- th1[i]+ eps 
-        
-        ## compute resulting derivative values
-        grad1 <- grad(th1,...)
-        
-        ## approximate -dl/dth[i]
-        Hfd[i,] <- (grad1 - gradval)/eps 
-      }
-      
-      ##make sure the matrix is symmetric
-      Hfd <- (t(Hfd)+Hfd)/2
-      chess <- chol(Hfd)
+        ## calculate hessian with nullhess
+        Hfd <- nullhess(xval,grad,...,eps)
+        chess <- chol(Hfd) #? remember to change this to QR comp
     } else {
       chess <- chol(hess(xval,...))
     }
@@ -97,22 +105,7 @@ newt <- function(theta,
       f <- func(theta, ...)
       g <- grad(theta, ...)
       if (is.null(hess)){
-        ## finite difference Hessian
-        Hfd <- matrix(0, len,len)
-        
-        for (i in 1:len) {## loop over parameters
-          ## increase th1[i] by eps
-          th1 <- xvalcheck; th1[i] <- th1[i]+ eps 
-          
-          ## compute resulting derivative values
-          grad1 <- grad(th1,...)
-          
-          ## approximate -dl/dth[i]
-          Hfd[i,] <- (grad1 - gradval)/eps 
-        }
-        
-        ##make sure the matrix is symmetric
-        Hfd <- (t(Hfd)+Hfd)/2
+        Hfd <- nullhess(theta,grad,...,eps)
         chess <- chol(Hfd)
       } else {
       chess <- chol(hess(theta,...))

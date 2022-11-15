@@ -72,18 +72,27 @@ newt <- function(theta,
     ## use formula
     xvalcheck <- xval - Hi %*% gradval
     
+    ## set k to zero to loop over
     k <- 0
+    
+    ## set outputs for checks 
     f2 <- func(xval)
     f3 <- func(xvalcheck)
-    ## if the step fails to reduce the objective
+    
+    ## while the step fails to reduce the objective reduce the step
     while (f3 > f2) {
       
+      ## half step
       xvalcheck <- xval - (1/2)**k * Hi %*% gradval
+      
+      ## iterate k
       k <- k + 1
+      
+      ## evaluate new value so the loop terminates at some point
       f3 <- func(xvalcheck)
     }
     
-    ## If we have an answer close enough to last time then stop
+    ## If we have an answer converging within tolerance then stop
     if ( abs(f3 - f2) < tol ) {
       
       ## get final values
@@ -95,11 +104,16 @@ newt <- function(theta,
       iter <- i
       
       returnlist <- list(f,theta,iter,g,Hi)
+      
+      ## return values
       return(returnlist)
-    }
+    } ## else!
+    
+    ## assign new xval to continue newton method iterations over i
     xval <- xvalcheck
-  }
-}
+    
+  } ## end newton iterations
+} ## end newt
 
 
 

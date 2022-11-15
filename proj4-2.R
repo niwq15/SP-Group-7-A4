@@ -14,18 +14,23 @@ newt <- function(theta,
   ## create a function to approximate the hessian when no input is given
   nullhess <- function(theta,grad,...,eps=1e-6){
     
+    ## find length of theta vector
     len <- length(theta)
+    
+    ## intialise a zero matrix for replacement
     Hfd <- matrix(0, len,len)
+    
+    ## calculate gradient at input theta
     gradval <- grad(theta)
     
     for (i in 1:len) {## loop over parameters
-      ## increase th1[i] by eps
-      th1 <- theta; th1[i] <- th1[i]+ eps 
+      ## increase ith theta value by eps
+      th1 <- theta; th1[i] <- th1[i] + eps 
       
-      ## compute resulting derivative values
+      ## compute resulting gradient values
       grad1 <- grad(th1,...)
       
-      ## approximate -dl/dth[i]
+      ## approximate the ith row in the hessian
       Hfd[i,] <- (grad1 - gradval)/eps 
     }
     
@@ -33,6 +38,7 @@ newt <- function(theta,
     Hfd <- (t(Hfd)+Hfd)/2
     return(Hfd)
   }
+  
   ## use the 'func' function and 'theta' to get the objective function
   f <- func(theta,...) 
   

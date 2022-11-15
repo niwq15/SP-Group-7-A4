@@ -40,6 +40,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     ## print(Hi) ##result can be checked with solve(hess)
   }
 
+  #### important: (inverse) Hessian matrix will change for different theta values
+  
   ## After each try, if a better theta value is found, use 'theta' to store the value
   n_iter <- 0; n_half <- 0
   

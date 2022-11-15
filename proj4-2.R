@@ -24,7 +24,7 @@ newt <- function(theta,
     return("The objective function is not finite at the initial theta value.") 
   }
   
-  if (is.finite(gradval)==FALSE) {
+  if (any(is.finite(gradval)==FALSE)) {
     break
     return("The derivatives are not finite at the initial theta value.") 
   }
@@ -32,7 +32,7 @@ newt <- function(theta,
   ## If the objective or derivatives are finite, do the following steps.
   ## If the Hessian matrix is not supplied, we use an approximation by finite
   ## differencing of the gradient vector
-  if (hess=NULL) {
+  if (is.null(hess)) {
     ## the length of the gradient vector
     len <- length(gradval) 
     
@@ -52,39 +52,67 @@ newt <- function(theta,
     
     ##make sure the matrix is symmetric
     Hfd <- (t(Hfd)+Hfd)/2
+  }
     
-  }## now we have Hfd, an approximate Hessian matrix
+  ## now we have Hfd, an approximate Hessian matrix
   
-  
-  ## create empty vector to store the points
+  ## empty vector to store the points
   xval <- c() 
   
   ## use the 'theta' values as initial x0
-  xval[1] <- theta 
+  xval <- theta
+  len <- length(xval)
   
-  ## loop over number of Newton iterations to try
+  ## loop over 2 to max iterations
   for (i in 2:maxit) {
-    gradvali <- gb(xval[i-1])
-    hessi <- hb(xval[i-1])
-    chessi <- chol(hessi)
-    Hii <- backsolve(chessi,forwardsolve(t(chessi),diag(c(rep(1,length(len))))))
-    xval[i] <- xval[i-1] - gradvali(xval[i-1]) %*% Hii ## use the Newton's formula
+    gradval <- grad(xval)
     
-    if (xval[i]-xval[i-1]>0) {## if the step fails to reduce the objective
-      xval[i] <- xval[i-1] - (1/2)*gradval/Hfd
+    ## cholesky decomposition to get hessian inverse
+    chess <- chol(hess(xval))
+    Hi <- backsolve(chess,forwardsolve(t(chess),diag(rep(1,len))))
+    
+    ## use formula
+    xvalcheck <- xval - Hi %*% gradval
+    
+    ## if the step fails to reduce the objective
+    while (norm(xvalcheck - xval,"F") > 0) {
+      
+      xvalcheck <- xval - (1/2) * Hi %*% gradval
     }
     
-    if ( xval[i]-xval[i-1] < tol) {
-      theta <- xval[i]
+    ## If we have an answer close enough to last time then stop
+    if ( norm(xval - xvalcheck, "F") < tol) {
+      
+      ## get final values
+      theta <- xvalcheck
       f <- func(theta, ...)
       g <- grad(theta, ...)
+      chess <- chol(hess(theta))
+      Hi <- backsolve(chess,forwardsolve(chess,diag(rep(1,len))))
+      iter <- i
       
-      iter <- length(xval)
-      return(f, theta, iter, g)
+      return(f, theta, iter, g, Hi)
     }
   }
 }
 
+
+
+rb <- function(th,k=2) {
+  k*(th[2]-th[1]^2)^2 + (1-th[1])^2
+}
+
+gb <- function(th,k=2) {
+  c(-2*(1-th[1])-k*4*th[1]*(th[2]-th[1]^2),k*2*(th[2]-th[1]^2))
+}
+
+hb <- function(th,k=2) {
+  h <- matrix(0,2,2)
+  h[1,1] <- 2-k*2*(2*(th[2]-th[1]^2) - 4*th[1]^2)
+  h[2,2] <- 2*k
+  h[1,2] <- h[2,1] <- -4*k*th[1]
+  h
+}
 
 
 ### Hessian inverse test

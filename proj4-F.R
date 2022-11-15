@@ -82,12 +82,41 @@ newt <- function(theta, #this is our initial search point
   
   
   #Implement Newton's Method: 
-  #f(x_(k+1)) = f(x_k) - f''(x_k)^(-1) * f'(x_k)
-  #f''(x_k)^(-1) = hi @k  
-  #f'(x_k) = gradval @ k 
-  #f(x_k) = f @ k 
+  # theta_(k+1) = theta_k - f''(theta_k)^(-1) * f'(theta_k)
+  # f''(theta_k)^(-1) = hi @ k th step 
+  # f'(theta_k) = gradval @ k th step 
+  # f(theta_k) = f @ k th step 
+  # theta_k = k th param val scanned
+  # theta_(k+1) = next theta point to scan (should be closer to the min)
   
   
+  n_iter <- 0 # count the number of iterations 
+  
+  while (n_iter < maxit ){ # iteration until maximum iteration reached 
+    theta2 <-  theta - hi %*% gradval #find the next step 
+    f2 <- func(theta2,...)                #evaluate the fn at next step 
+    
+    #if the fn increases rather than decreases, half the step size in the same direction
+    n_half <- 0  # counter for times steps halved 
+    while ( f2 > f ){ #iterate until fn val decreases 
+      n_half <- n_half + 1 #counter goes up 
+      
+      theta2 <-  theta - ( hi %*% gradval ) * ( 0.5 ^(n_half) )
+      f2 <- func(theta2,...) 
+      
+      if (n_half >= max.half ) { 
+        stop()
+      
+      
+    }
+    
+    
+    
+    
+    
+    
+    n_iter <- n_iter + 1 #iteration num count increases
+  }
   
   
   

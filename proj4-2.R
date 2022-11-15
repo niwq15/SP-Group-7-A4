@@ -55,6 +55,34 @@ newt <- function(theta,
     
   }## now we have Hfd, an approximate Hessian matrix
   
+  
+  ## create empty vector to store the points
+  xval <- c() 
+  
+  ## use the 'theta' values as initial x0
+  xval[1] <- theta 
+  
+  ## loop over number of Newton iterations to try
+  for (i in 2:maxit) {
+    gradvali <- gb(xval[i-1])
+    hessi <- hb(xval[i-1])
+    chessi <- chol(hessi)
+    Hii <- backsolve(chessi,forwardsolve(t(chessi),diag(c(rep(1,length(len))))))
+    xval[i] <- xval[i-1] - gradvali(xval[i-1]) %*% Hii ## use the Newton's formula
+    
+    if (xval[i]-xval[i-1]>0) {## if the step fails to reduce the objective
+      xval[i] <- xval[i-1] - (1/2)*gradval/Hfd
+    }
+    
+    if ( xval[i]-xval[i-1] < tol) {
+      theta <- xval[i]
+      f <- func(theta, ...)
+      g <- grad(theta, ...)
+      
+      iter <- length(xval)
+      return(f, theta, iter, g)
+    }
+  }
 }
 
 
@@ -68,12 +96,12 @@ eigensH <- eigen(hess)$values
 
 ## check if hessian is positive definite
 # for positive definite all eigenvalues greater than 0
-if (any(eigensH <= 0)){
+if (any(eigensH <= 0)){ ## if matrix is not positive definite
   
   print("Hessian not positive definite")
   # change this print to a return in the function
   
-} else {
+} else { ## matrix is positive definite
   
   # assign cholesky upper triangle
   chess <- chol(hess)
@@ -82,5 +110,6 @@ if (any(eigensH <= 0)){
   Hi <- backsolve(chess,forwardsolve(t(chess),diag(c(rep(1,length(eigensH))))))
   
   print(Hi)
-  # remove this print in the function, result can be checked with solve(hess)
+  # remove this print in the function, result can be checked with 
+  # print(solve(hess))
 }

@@ -16,7 +16,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   }
   ## If the objective or derivatives are finite, do the following steps 
   ## If the Hessian matrix is not supplied, we use an approximation by finite differencing of the gradient vector
-  if (hess==NULL) {
+  if (is.null(hess)) {
     len <- length(gradval) ## the length of the gradient vector 
     Hfd <- matrix(0, len,len) ## finite difference Hessian
     for (i in 1:length(theta)) {## loop over parameters
@@ -60,7 +60,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     
     while (f2 < f) {
       n_iter <- n_iter + 1 ## count the number of iterations
-      bound <- tol*abs(f2)*fscale
+      bound <- tol*(abs(f2)+fscale)
       if (any(abs(gradval)) < bound) {
        theta <- theta2 ## use 'theta' to store the optimal theta value
        f <- func(theta,...)

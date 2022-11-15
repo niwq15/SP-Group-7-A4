@@ -24,10 +24,22 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
       grad1 <- grad(th1,...) ## compute resulting derivative values
       Hfd[i,] <- (grad1 - gradval)/eps ## approximate -dl/dth[i]
     }
-    Hfd <- (t(Hfd)+Hfd)/2 ##make sure the matrix is symmetric
-  }## now we have Hfd, an approximate Hessian matrix 
+    hess <- (t(Hfd)+Hfd)/2 ##make sure the matrix is symmetric and store into 'hess' for later use
+  }## now we have hess, an approximate Hessian matrix 
   
-  ## 
+  ## Check if the (approximated) Hessian matrix is positive definite, if so, use Cholesky decomposition to calculate the inverse
+  ## The hessian matrix is positive definite if it has only positive eigenvalues
+  eigensH <- eigen(hess)$values ## caculate the eigenvalues of 'hess'
+  if (any(eigensH <= 0)){## if there exists some non-positive eigenvalues
+    
+    print("The Hessian is not positive definite.")
+  } else {## if all the eigenvalues are positive
+    
+    chess <- chol(hess) ## solve with cholesky
+    Hi <- backsolve(chess,forwardsolve(t(chess),diag(c(rep(1,length(eigensH)))))) ## calculate the hessian inverse
+    ## print(Hi) ##result can be checked with solve(hess)
+  }
+  
   xval <- c() ## empty vector to store the points
   xval[1] <- theta ## use the 'theta' values as initial x0
   for (i in 2:maxit) {## the number of Newton iterations to try

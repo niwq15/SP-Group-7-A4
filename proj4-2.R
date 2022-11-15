@@ -35,7 +35,7 @@ newt <- function(theta,
   
   ## loop over 2 to max iterations
   for (i in 2:maxit) {
-    gradval <- grad(xval)
+    gradval <- grad(xval,...)
     
     ## If the objective or derivatives are finite, do the following steps.
     ## If the Hessian matrix is not supplied, we use an approximation by finite
@@ -59,7 +59,7 @@ newt <- function(theta,
       Hfd <- (t(Hfd)+Hfd)/2
       chess <- chol(Hfd)
     } else {
-      chess <- chol(hess(xval))
+      chess <- chol(hess(xval,...))
     }
 
     ## cholesky decomposition to get hessian inverse
@@ -72,8 +72,8 @@ newt <- function(theta,
     k <- 0
     
     ## set outputs for checks 
-    f2 <- func(xval)
-    f3 <- func(xvalcheck)
+    f2 <- func(xval,...)
+    f3 <- func(xvalcheck,...)
     
     ## while the step fails to reduce the objective reduce the step
     while (f3 > f2) {
@@ -85,11 +85,12 @@ newt <- function(theta,
       k <- k + 1
       
       ## evaluate new value so the loop terminates at some point
-      f3 <- func(xvalcheck)
+      f3 <- func(xvalcheck,...)
     }
     
+    gradval <- grad(xvalcheck,...)
     ## If we have an answer converging within tolerance then stop
-    if ( all( abs(gradval) < tol * (abs(f2)+fscale) )) {
+    if ( all( abs(gradval) < rep(tol * (abs(f3)+fscale),len) )) {
       
       ## get final values
       theta <- xvalcheck
@@ -114,7 +115,7 @@ newt <- function(theta,
         Hfd <- (t(Hfd)+Hfd)/2
         chess <- chol(Hfd)
       } else {
-      chess <- chol(hess(theta))
+      chess <- chol(hess(theta,...))
       }
       Hi <- backsolve(chess,forwardsolve(chess,diag(rep(1,len))))
       iter <- i

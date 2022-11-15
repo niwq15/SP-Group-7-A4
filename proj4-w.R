@@ -16,7 +16,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   }
   ## If the objective or derivatives are finite, do the following steps 
   ## If the Hessian matrix is not supplied, we use an approximation by finite differencing of the gradient vector
-  if (hess=NULL) {
+  if (hess==NULL) {
     len <- length(gradval) ## the length of the gradient vector 
     Hfd <- matrix(0, len,len) ## finite difference Hessian
     for (i in 1:length(theta)) {## loop over parameters

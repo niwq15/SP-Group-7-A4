@@ -52,12 +52,10 @@ newt <- function(theta,
     
     ##make sure the matrix is symmetric
     Hfd <- (t(Hfd)+Hfd)/2
+    hess <- Hfd
   }
     
   ## now we have Hfd, an approximate Hessian matrix
-  
-  ## empty vector to store the points
-  xval <- c() 
   
   ## use the 'theta' values as initial x0
   xval <- theta
@@ -74,14 +72,19 @@ newt <- function(theta,
     ## use formula
     xvalcheck <- xval - Hi %*% gradval
     
+    k <- 0
+    f2 <- func(xval)
+    f3 <- func(xvalcheck)
     ## if the step fails to reduce the objective
-    while (norm(xvalcheck - xval,"F") > 0) {
+    while (f3 > f2) {
       
-      xvalcheck <- xval - (1/2) * Hi %*% gradval
+      xvalcheck <- xval - (1/2)**k * Hi %*% gradval
+      k <- k + 1
+      f3 <- func(xvalcheck)
     }
     
     ## If we have an answer close enough to last time then stop
-    if ( norm(xval - xvalcheck, "F") < tol) {
+    if ( abs(f3 - f2) < tol ) {
       
       ## get final values
       theta <- xvalcheck
@@ -91,8 +94,10 @@ newt <- function(theta,
       Hi <- backsolve(chess,forwardsolve(chess,diag(rep(1,len))))
       iter <- i
       
-      return(f, theta, iter, g, Hi)
+      returnlist <- list(f,theta,iter,g,Hi)
+      return(returnlist)
     }
+    xval <- xvalcheck
   }
 }
 
@@ -114,6 +119,24 @@ hb <- function(th,k=2) {
   h
 }
 
+
+### function testing ###
+k <- 0
+theta <- c(0,0)
+f <- rb(theta)
+gradval <- gb(theta)
+chess <- chol(hb(theta))
+Hi <- backsolve(chess,forwardsolve(t(chess),diag(rep(1,length(theta)))))
+theta2 <- theta - Hi %*% gradval
+f2 <- rb(theta)
+f3 <- rb(theta2)
+while (f3 > f2) {
+  
+  theta2 <- theta - (1/2)**k * Hi %*% gradval
+  k <- k + 1
+  f3 <- rb(theta2)
+}
+f3 - f2
 
 ### Hessian inverse test
 # create hessian

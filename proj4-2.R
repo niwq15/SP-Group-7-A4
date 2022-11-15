@@ -89,7 +89,7 @@ newt <- function(theta,
     }
     
     ## If we have an answer converging within tolerance then stop
-    if ( abs(f3 - f2) < tol ) {
+    if ( all( abs(gradval) < tol * (abs(f2)+fscale) )) {
       
       ## get final values
       theta <- xvalcheck
@@ -120,7 +120,8 @@ newt <- function(theta,
       iter <- i
       
       returnlist <- list(f,theta,iter,g,Hi)
-      
+      names(returnlist) <- c("Objective value","x*","Iterations",
+                             "Gradient at x*", "Inverse of Hessian at x*")
       ## return values
       return(returnlist)
     } ## else!

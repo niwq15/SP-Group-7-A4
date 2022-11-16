@@ -57,13 +57,11 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     
     ## If the Hessian matrix is not supplied, we use the 'nullhess' function to calculate an approximation by finite 
     ## differencing of the gradient vector
-    if (is.null(hess)) {
-      Hfd <- nullhess(theta,grad,...,eps) ## calculate the Hessian matrix
-      chess <- chol(Hfd) #? remember to change this to QR comp
-    } else {
-      chess <- chol(hess(theta,...))
-    }
-
+    if (is.null(hess)) { ## if the 'hess' is not given
+      hess <- nullhess ## use the 'nullhess' function instead
+    } 
+    ## Do we need check whether the hessian matrix is positive definite during iterations??
+    chess <- chol(hess(theta,...)) ## solve with cholesky 
     Hi <- backsolve(chess,forwardsolve(t(chess),diag(rep(1,len)))) ## cholesky decomposition to get hessian inverse
     theta2 <- theta - Hi %*% gradval ## use the Newton's formula
     f2 <- func(theta2,...) ## the objective value for theta2
@@ -84,7 +82,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
       }
       ## Stop if we have tried max.half step halvings, but still fail to reduce the objective
       if (k == max.half) {
-        warning("The step fails to improve the objective after trying 100 halved steps.")
+        stop("The step fails to improve the objective after trying 100 halved steps.")
         ## should return the value corresponding to initial theta value
       }
     }
@@ -93,32 +91,51 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     ## The convergence criteria: all elements of the gradient vector have absolute value less than the product of 'tol' and the absolute value of the objective 
     ## function plus fscale
     ## !! important change!!! mentioned in one piazza post @105 
-    #n_iter <- n_iter + 1 ## count the number of iterations
     bound <- tol*abs(f2)+fscale
     if (all(abs(gradval) < rep(bound, len)) ) { ## If we have an answer converging within tolerance then stop
       ## get final values
       theta <- theta2
       f <- func(theta, ...)
       g <- grad(theta, ...)
-      if (is.null(hess)){
-        Hfd <- nullhess(theta,grad,...,eps)
-        chess <- chol(Hfd)
-      } else {
-        chess <- chol(hess(theta,...))
-      }
+      H <- hess(theta,...) ## the Hessian matrix
+      ## Check whether the Hessian matrix is positive definite at convergence
+      eigensH <- eigen(H)$values ## caculate the eigenvalues of 'H'
+      if (any(eigensH <= 0)){## if there exists some non-positive eigenvalues
+        warning("The Hessian is not positive definite.")
+      } ## otherwise the Hessian matrix is positive definite
+      chess <- chol(H) ## solve with cholesky
       Hi <- backsolve(chess,forwardsolve(chess,diag(rep(1,len))))
       iter <- i
       returnlist <- list(f,theta,iter,g,Hi)
       names(returnlist) <- c("Objective value","theta*","Number of iterations",
                              "Gradient at theta*", "Inverse of Hessian at theta*")
       return(returnlist) ## return values
+    } else {
+      ## If the new theta reduces the objective but fails to pass the convergence test, then update the theta and continue the above steps
+      theta <- theta2
     }
     
-    ## assign new xval to continue newton method iterations over i
-    theta <- theta2
-    
-    ## 
-    
+    ## If maxit is reached without convergence
+    if (i == maxit) {
+      stop("After trying 100 iterations, the convergence is not found.")
+    }
     
   } ## end newton iterations
 } ## end newt
+
+
+rb <- function(th,k=2) {
+  k*(th[2]-th[1]^2)^2 + (1-th[1])^2
+}
+
+gb <- function(th,k=2) {
+  c(-2*(1-th[1])-k*4*th[1]*(th[2]-th[1]^2),k*2*(th[2]-th[1]^2))
+}
+
+hb <- function(th,k=2) {
+  h <- matrix(0,2,2)
+  h[1,1] <- 2-k*2*(2*(th[2]-th[1]^2) - 4*th[1]^2)
+  h[2,2] <- 2*k
+  h[1,2] <- h[2,1] <- -4*k*th[1]
+  h
+}

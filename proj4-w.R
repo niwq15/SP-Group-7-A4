@@ -1,5 +1,8 @@
 ## The 'newt' function has inputs, including theta, func, grad, hess
 
+## The 'newt' function has inputs, theta (a vector of initial values), func (the objective function to minimize), grad (the gradient function),
+## hess (the Hessian matrix function, 'hess = Null' when no hessian function is given), ... (any arguments of func, grad and hess except theta), tol (the convergence tolerance), 
+## fscale (), maxit (),max.half (), eps ()
 
 newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.half=20,eps=1e-6) {
   f <- func(theta,...) ## use the 'func' function and 'theta' to get the objective function

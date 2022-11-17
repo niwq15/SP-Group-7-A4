@@ -80,7 +80,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   if (is.null(hess)) { ## if the 'hess' is not given
     hess <- nullhess ## use the 'nullhess' function instead
   }
-  
+  h <- hess(theta,...) 
   ## Minimization requires the hessian be positive definite 
   options(show.error.messages = TRUE)
   ## Cholesky decomposition works only if matrix is positive definite 

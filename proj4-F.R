@@ -102,7 +102,7 @@ newt <- function(theta, #this is our initial search point
     # if the step increases the fn value rather than decreases, 
     # half the step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
-    while ( f2 > f ){ #iterate until fn val of next step is lower than current step 
+    while ( f2 >= f ){ #iterate until fn val of next step is lower than current step 
       n_half <- n_half + 1 #counter goes up 
       
       #if we have hit the halving limit without finding the minimum

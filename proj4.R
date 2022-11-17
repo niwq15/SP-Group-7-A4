@@ -89,7 +89,20 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   options(show.error.messages = TRUE)
   ## Cholesky decomposition works only if matrix is positive definite 
   ## Try Cholesky decomposition, if it fails console returns an error 
-  R <- try(chol(h) , stop("Hessian is not positive definite at the minimum", call. = FALSE))
+  ##  R <- try(chol(h) , stop("Hessian is not positive definite at the minimum", call. = FALSE))
+  R <- try(chol(h), silent = TRUE)
+  if (inherits(R, "try-error")) {
+    i <- 1
+    while (i < 100) {
+      h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
+      #h1 <- h + (10^(-7+i))*norm(h)*diag(2) 
+      eigensH <- eigen(h1)$values
+      if (all(eigensH > 0)){
+        break
+      }
+      i <- i + 1
+    }
+  }
   ## Hessian Inverse hi - using Cholesky (only works if chol works)
   hi <- chol2inv(chol(h))
  
@@ -147,7 +160,20 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     }
     
     ## Test whether the hessian is still positive definite 
-    R <- try(chol(h) , stop(paste("Hessian is not positive definite at step ", n_iter), call. = FALSE))
+    ## R <- try(chol(h) , stop(paste("Hessian is not positive definite at step ", n_iter), call. = FALSE))
+    R <- try(chol(h), silent = TRUE)
+    if (inherits(R, "try-error")) {
+      i <- 1
+      while (i < 100) {
+        h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
+        #h1 <- h + (10^(-7+i))*norm(h)*diag(2) 
+        eigensH <- eigen(h1)$values
+        if (all(eigensH > 0)){
+          break
+        }
+        i <- i + 1
+      }
+    }
     #Calculate the Hessian Inverse 'hi' - using Cholesky (only works if chol works)
     hi <- chol2inv(chol(h))
    

@@ -149,11 +149,11 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   R <- try(chol(h), silent = TRUE)
   if (inherits(R, "try-error")) {
     i <- 1
-    while (i < 100) {
+    while (i < maxit) { ## also iterate at most 100 times
       h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
-      
       eigensH <- eigen(h1)$values
       if (all(eigensH > 0)){
+          h <- h1
         break
       }
       i <- i + 1
@@ -230,15 +230,14 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     
     
     ## Test whether the hessian is still positive definite 
-
     R <- try(chol(h), silent = TRUE)
     if (inherits(R, "try-error")) {
       i <- 1
-      while (i < 100) {
+      while (i < maxit) {
         h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
-        #h1 <- h + (10^(-7+i))*norm(h)*diag(2) 
         eigensH <- eigen(h1)$values
         if (all(eigensH > 0)){
+            h <- h1
           break
         }
         i <- i + 1

@@ -2,27 +2,43 @@
 # Fatima Kasenally (S2443602); Wenqi Ni (s1792412); Cameron Allan (S1748084)
 
 #### address of github repo:
-# 
+# https://github.com/niwq15/SP-Group-7-A4
 
 
 #### Contributions
-#
+#Fatima: added the finite test for the function and grad
+      # created a function to calculate the hessian via finite difference methods 
+      # created a test for hessian positive definiteness 
+      # implemented newton's method 
+      # implemented iteration limit (with error warning)
+      # implemented half step search (with error warning)
+      # feasibility checks of next step (f(theta_2), g(theta_2), h(theta_2) validation)
+      # calculated the inverse hessian (when applicable)
+      # implemented the convergence test 
+      # testing and validation of the code 
+
+# Cameron:
+
+# Wenqi: 
 
 
-# Wenqi created the  and added the warnings 
 
-#
+###### Overview 
+# This file holds the self-contained code to implement Newton’s method for 
+# minimization of functions. 
+# First we create a 'nullhess' function to approximate the Hessian matrix via 
+# finite difference methods using the gradient vector, which will be used 
+# when the Hessian matrix is not supplied. 
+# Then we show the 'newt' function, which implements Newton's method for optimization
 
-#### Overview 
-# This file holds the self-contained code to implement Newton’s method for minimization of functions. 
-# Newton’s method...
-# We firstly create a 'nullhess' function to approximate the Hessian matrix by finite differencing of the gradient vector, which will be used 
-# when the Hessian matrix is not supplied. Then we show the 'newt' function. 
 
 
-## The 'nullhess' function helps to approximate the Hessian matrix when it is not supplied.
-## The 'nullhess' function has inputs, 
-## create a function to approximate the hessian when no input is given
+## The 'nullhess' function approximates the Hessian matrix when it is not supplied.
+## The 'nullhess' function has inputs: 
+      # theta : the start point of our search 
+      # grad : the gradient vector at the start point 
+      # eps : the size of the pertubation in theta 
+## The output is the hessian matrix defined at theta
 nullhess <- function(theta,grad,...,eps=1e-6){
   gradval <- grad(theta,...) # calculate gradient using the input 'theta'
   len <- length(gradval) # store gradient vector length

@@ -14,8 +14,10 @@
 #
 
 #### Overview 
-# This file holds the self-contained code to use
-
+# This file holds the self-contained code to implement Newton’s method for minimization of functions. 
+# Newton’s method...
+# We firstly create a 'nullhess' function to approximate the Hessian matrix by finite differencing of the gradient vector, which will be used 
+# when the Hessian matrix is not supplied. Then we show the 'newt' function. 
 
 
 ## The 'nullhess' function helps to approximate the Hessian matrix when it is not supplied.

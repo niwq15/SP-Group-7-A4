@@ -18,6 +18,11 @@
 # testing and validation of the code 
 
 # Cameron:
+# created test functions to scrutinize newt()
+# created unused method to inverse hessian
+# altered the implementation of final hessian inverse calc to be a function
+# constructed an initial version of newt, with fewer bells and whistles
+# bug-fixing
 
 # Wenqi: 
 # created the function to approximate the Hessian matrix using finite difference method

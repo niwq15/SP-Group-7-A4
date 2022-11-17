@@ -269,7 +269,22 @@ f3 - f2
 hess <- array(c(3,0,1,0,3,0,1,0,3),dim=c(3,3))
 
 # save eigenvalues
-eigensH <- eigen(hess)$values
+# wenqi function 1. R^2 -> R
+W1f <- function(x){
+  2*(x[2]-x[1]^2)^2 + (1-x[1])^2
+}
+
+W1g <- function(x){
+  c(-8*x[1]*x[2] + 8*x[1]^3 - 2 + 2*x[1], 4*(x[2] - x[1]^2))
+}
+
+W1h <- function(x){
+  h <- matrix(0,2,2)
+  h[1,1] <- -8*x[2] + 24*x[1]^2 + 2
+  h[2,2] <- 4
+  h[1,2] <- h[2,1] <- -8*x[1]
+  h
+}
 
 ## check if hessian is positive definite
 # for positive definite all eigenvalues greater than 0

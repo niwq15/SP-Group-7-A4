@@ -222,7 +222,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     ## Case 1: if the step fails to reduce the objective we need to half the 
     ## step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
-    while ( f2 > f ){# iterate until fn val of next step (f2) is lower than 
+    while ( f2 > f ){# iterate until fn val of next step (f2) no greater than  
       # that of the current step (f)
       n_half <- n_half + 1 # counter goes up 
       # Stop if we have tried max.half step halvings, and failed to reduce the 

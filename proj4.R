@@ -21,11 +21,11 @@
 
 # Wenqi: 
 # created the function to approximate the Hessian matrix using finite difference method
+# implemented the ways to perturb the Hessian matrix if it is not positive definite
+# implemented newton's method and half step
 # added most of the warnings, including checking whether the objective function
 # and gradient are finite, the maximum number of halving steps, the maximum number of
 # iterations. 
-# implemented the ways to perturb the Hessian matrix if it is not positive definite
-
 
 ###### Overview 
 # This file holds the self-contained code to implement Newton’s method for 

@@ -168,11 +168,14 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   options(show.error.messages = TRUE) #console displays error messages 
   # Cholesky decomposition works only if matrix is positive definite 
 
-  ## The following part deals with the case that the Hessian matrix is not 
-  ## positive definite and in this case we perturb the Hessian matrix to be so
-  ## The approach is to add a multiple of the identity matrix and its matrix norm
-  ## to it, trying till we get a positive definite Hessian matrix (tested by 
-  ## Cholesky or eigen decomposition)  
+  
+  ## When the Hessian matrix is not positive definite we perturb the Hessian
+  ## matrix until it is. To do this, add a the identity matrix, scaled by the 
+  ## Hessian norm (norm(h)) and another multiplier (10^i). The multiplier index
+  ## i is stepped up until the perturbed Hessian is positive definite or the 
+  ## maximum number of iterations has been exceeded. 
+  ## The positive definiteness of the Hessian matrix at theta is tested by
+  ## Cholesky and eigen decomposition.   
   R <- try(chol(h), silent = TRUE)
   if (inherits(R, "try-error")) {
     i <- 1

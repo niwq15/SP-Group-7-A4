@@ -121,6 +121,7 @@ newt <- function(theta, #this is our initial search point
       
     }#end while (step halving)
     
+    
     #Check half stepping does not lead to a non-finite objective function value
     if (is.finite(f2)==FALSE) { #check if the function is real 
       #When f is not real the function is not analytic. 

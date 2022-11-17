@@ -12,7 +12,7 @@
 # implemented newton's method 
 # implemented iteration limit (with error warning)
 # implemented half step search (with error warning)
-# feasibility checks of next step (f(theta_2), g(theta_2), h(theta_2) validation)
+# feasibility checks of next step (f(theta_2), g(theta_2), h(theta_2)validation)
 # calculated the inverse hessian (when applicable)
 # implemented the convergence test 
 # testing and validation of the code 
@@ -25,12 +25,14 @@
 # bug-fixing
 
 # Wenqi: 
-# created the function to approximate the Hessian matrix using finite difference method
-# implemented the ways to perturb the Hessian matrix if it is not positive definite
+# created the function to approximate the Hessian matrix using finite difference
+# method
+# implemented the ways to perturb the Hessian matrix if it is not positive 
+# definite 
 # implemented newton's method and half step
 # added most of the warnings, including checking whether the objective function
-# and gradient are finite, the maximum number of halving steps, the maximum number of
-# iterations. 
+# and gradient are finite, the maximum number of halving steps, the maximum 
+# number of iterations. 
 
 ###### Overview 
 # This file holds the self-contained code to implement Newton’s method for 
@@ -54,7 +56,8 @@
 # recalculated and updated and the procedure repeats. Each step is also 
 # tested for convergence. If the convergence test is passed, the proceudre 
 # has found the minimum. Else if the convergence requirements are not met 
-# within the allowed number of iterations the method has failed to find the # minimum. 
+# within the allowed number of iterations the method has failed to find the 
+# minimum. 
 
 
 
@@ -68,7 +71,7 @@
 nullhess <- function(theta,grad,...,eps=1e-6){ 
   gradval <- grad(theta,...) # calculate gradient vector at 'theta'
   len <- length(gradval) # store gradient vector length
-  Hfd <- matrix(0, len,len) # intialise a zero matrix for finite difference Hessian
+  Hfd <- matrix(0, len,len) # intialise a matrix for finite difference Hessian
   
   for (i in 1:len) {## loop over parameters
     th1 <- theta #store a copy of theta to operate on 
@@ -145,7 +148,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     stop("The objective function is not finite at the starting point. \n 
           The function is not analytic.")
   }  
-  if ( any( is.finite( gradval ) == FALSE ) ) { # check the gradient at the start
+  if ( any( is.finite( gradval ) == FALSE ) ){# check the gradient at the start
     # is real 
     stop("The gradient is not finite at the starting point. \n 
           The function is not analytic.")
@@ -219,7 +222,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     ## Case 1: if the step fails to reduce the objective we need to half the 
     ## step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
-    while ( f2 >= f ){# iterate until fn val of next step (f2) is lower than 
+    while ( f2 > f ){# iterate until fn val of next step (f2) is lower than 
       # that of the current step (f)
       n_half <- n_half + 1 # counter goes up 
       # Stop if we have tried max.half step halvings, and failed to reduce the 
@@ -236,7 +239,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
       f2 <- func(theta2,...) # evaluate the objective at the new theta 
     }# end while (step halving)
     
-    ## Check half stepping does not lead to a non-finite objective function value
+    # Check half stepping does not lead to a non-finite objective function value
     if (is.finite(f2)==FALSE) { #check if the function is real 
       #When f2 is not real the function is not analytic at theta2. 
       stop("The function value at the new step is not real. \n 
@@ -277,8 +280,9 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     }
     # Calculate the Hessian Inverse 'hi' using Cholesky 
     # (only works if chol works)
-    hi <- try(chol2inv(chol(h)), stop("A positive definite Hessian was not found",
-                                      call. = FALSE))
+    hi <- try(chol2inv(chol(h)),
+              stop("A positive definite Hessian was not found",
+                   call. = FALSE))
     
     ## Test for convergence : 
     # If the gradient values are all approximately zero 
@@ -308,9 +312,10 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   # searched: 
   output <- list ( f = f, # function value at the last theta
                    theta = theta, # value of the parameters at the last theta
-                   iter = n_iter, # number of iterations executed
+                   iter = maxit, # number of iterations executed
                    g = gradval, # gradient vector at the last theta
                    Hi = hi) # inverse hessian at the last theta  
   return(output) # return the list 
   
 }#end function 
+

@@ -131,63 +131,49 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
           The function here is not analytic.")
     }
     
+    ## Case 2: if the step reduces the objective, then we need to test the convergence
     ## Update the variables using the latest valid theta 
     theta <-  theta2
     f <- f2
-    
     gradval <- grad(theta2,...) #next step's gradient vector 
     
-    #next step's hessian matrix:
+    ## Next step's hessian matrix:
     if (is.null(hess)) { #no analytic hessian fn supplied  
-      # calculate the hessian of the next step using the finite difference method 
+      ## Calculate the hessian of the next step using the finite difference method 
       h <- nullhess(theta2,grad,...,eps=1e-6)
     } else { 
-      #if the hessian matrix is supplied use it to calculate the hessian matrix
-      #of the next step 
+      ## If the hessian matrix is supplied use it to calculate the hessian matrix of the next step 
       h <- hess(theta2, ...)
     }
     
-    
-    #test that the hessian is still positive definite 
+    ## Test whether the hessian is still positive definite 
     R <- try(chol(h) , stop(paste("Hessian is not positive definite at step ", n_iter), call. = FALSE))
     #Calculate the Hessian Inverse 'hi' - using Cholesky (only works if chol works)
     hi <- chol2inv(chol(h))
-    
-    
-    
-    
-    
-    #Test for convergence
-    
-    #if the gradient values are all zero (according to our convergence condition)
-    if (all( abs(gradval) < tol * (abs(f) + fscale ) ) ) { 
+   
+    ## Test for convergence
+    ## If the gradient values are all zero (according to our convergence condition)
+    if (all( abs(gradval) < tol * (abs(f) + fscale ) ) ) { ## if we have an answer converging within tolerance then stop
       #function returns the following parameters
       output <- list ( f = f, #function value at the minimum
                        theta = theta, #location of minimum
                        iter = n_iter, #number of iterations required to reach min
                        g = gradval, #gradient vector at the minimum 
                        Hi = hi) #inverse hessian at the minimum 
-      return(output)
-      
-    }  
-    
-    
-    
+      return(output) 
+    }   
+    ## If the new theta reduces the objective but fails to pass the convergence test, repeat the above steps
     n_iter <- n_iter + 1 #iteration num count increases
   }
+  ## If the code gets to this part number of iterations has exceeded limit :( 
   
-  
-  #If the code gets to this part number of iterations has exceeded limit :( 
-  
-  warning("The maximum number of iterations has been exceeded")
-  
-  
-  #function returns the following parameters at the last theta position searched
-  output <- list ( f = f, #function value at the minimum
-                   theta = theta, #location of minimum
-                   iter = n_iter, #number of iterations required to reach min
-                   g = gradval, #gradient vector at the minimum 
-                   Hi = hi) #inverse hessian at the minimum 
+  warning("The maximum number of iterations has been exceeded.")
+  ## The function returns the following parameters at the last theta position searched
+  output <- list ( f = f, ## function value at the minimum
+                   theta = theta, ## value of the parameters at the minimum.
+                   iter = n_iter, ## number of iterations required to reach min
+                   g = gradval, ## gradient vector at the minimum 
+                   Hi = hi) ## inverse hessian at the minimum 
   return(output)
   
 }#end function 

@@ -75,7 +75,7 @@ newt <- function(theta, #this is our initial search point
   options(show.error.messages = TRUE)
   #Cholesky decomposition works only if matrix is positive definite 
   #try Cholesky decomposition, if it fails console returns an error 
-  R <- try(chol(h) , stop("Hessian is not positive semi-definite at the minimum", call. = FALSE))
+  R <- try(chol(h) , stop("Hessian is not positive definite at the minimum", call. = FALSE))
   #Hessian Inverse hi - using Cholesky (only works if chol works)
   hi <- chol2inv(chol(h))
   
@@ -113,6 +113,7 @@ newt <- function(theta, #this is our initial search point
               , call. = FALSE)
       } #else continue halving the step size
       
+      
       #half the step size (again)
       theta2 <-  theta - ( hi %*% gradval ) * ( 0.5 ^(n_half) )
       #evaluate the function at the next step 
@@ -120,6 +121,12 @@ newt <- function(theta, #this is our initial search point
       
     }#end while (step halving)
     
+    #Check half stepping does not lead to a non-finite objective function value
+    if (is.finite(f2)==FALSE) { #check if the function is real 
+      #When f is not real the function is not analytic. 
+      stop("The function value at the new step is not real. \n 
+          The function here is not analytic.")
+    }
     
     
     
@@ -143,7 +150,7 @@ newt <- function(theta, #this is our initial search point
     
     
     #test that the hessian is still positive definite 
-    R <- try(chol(h) , stop(paste("Hessian is not positive semi-definite at step ", n_iter), call. = FALSE))
+    R <- try(chol(h) , stop(paste("Hessian is not positive definite at step ", n_iter), call. = FALSE))
     #Calculate the Hessian Inverse 'hi' - using Cholesky (only works if chol works)
     hi <- chol2inv(chol(h))
     
@@ -203,7 +210,7 @@ newt <- function(theta, #this is our initial search point
 
 #Code: 
 options(show.error.messages = TRUE, call. = FALSE)
-R <- try(chol(h) , stop("Hessian is not positive semi-definite at the minimum"))
+R <- try(chol(h) , stop("Hessian is not positive definite at the minimum"))
 
 #Hessian Inverse hi - using cholesky (only works if chol works)
 hi <- chol2inv(chol(h))
@@ -357,10 +364,14 @@ measure <- tol * (abs(f) + fscale )
 
 
 #### Testing Newt 
+th <- c(-4, 50)
+th <- c(0,0)
+
+
 newt(th, rb, gb, hb)
 
 
-
+newt(th, rb, gb)
 
 
 

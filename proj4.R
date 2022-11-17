@@ -30,12 +30,15 @@
 ###### Overview 
 # This file holds the self-contained code to implement Newton’s method for 
 # minimization of functions. 
+# The newton's method is based on the minimizing successive quadratic approximation
+# For an objective function, its gradient vector and Hessian matrix will be used 
+# to implement the method. The Hessian matrix needs to be positive definite, and 
+# if not, we need to perturb it to be so. 
 # First we create a 'nullhess' function to approximate the Hessian matrix via 
 # finite difference methods using the gradient vector, which will be used 
 # when the Hessian matrix is not supplied. 
 # Then we show the 'newt' function, which implements Newton's method for 
-# optimization
-
+# optimization. In the 'newt' function, some convergence test will be adopted. 
 
 
 ## The 'nullhess' function approximates the Hessian matrix when its analytic

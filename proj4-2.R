@@ -147,6 +147,20 @@ xtxhess <- function(x){
   diag(2,length(x))
 }
 
+# difference of cubes
+diff3 <- function(x){
+  x[1]**3 - x[2]**3
+}
+diff3derv <- function(x){
+  c(3*x[1]**2,3*x[2]**2)
+}
+diff3hess <- function(x){
+  h <- matrix(0,2,2)
+  h[1,1] <- 8*x[1]
+  h[2,2] <- -6*x[2]
+  h
+}
+
 
 # Simon's example, should return (1,1) with a min of 0
 rb <- function(th,k=2) {
@@ -165,6 +179,72 @@ hb <- function(th,k=2) {
   h
 }
 
+
+# wenqi function 1
+W1f <- function(x){
+  2*(x[2]-x[1]^2)^2 + (1-x[1])^2
+}
+
+W1g <- function(x){
+  c(-8*x[1]*x[2] + 8*x[1]^3 - 2 + 2*x[1], 4*(x[2] - x[1]^2))
+}
+
+W1h <- function(x){
+  h <- matrix(0,2,2)
+  h[1,1] <- -8*x[2] + 24*x[1]^2 + 2
+  h[2,2] <- 4
+  h[1,2] <- h[2,1] <- -8*x[1]
+  h
+}
+
+# wenqi function 2
+W2f <- function(x){
+  x[1]*exp(x[2] + x[3]^2)
+}
+
+W2g <- function(x){
+  c(exp(x[2] + x[3]^2), x[1]*exp(x[2] + x[3]^2), 2*x[1]*x[3]*exp(x[2] + x[3]^2))
+}
+
+W2h <- function(x){
+  h <- matrix(0,3,3)
+  h[1,1] <- 0
+  h[2,2] <- x[1]*exp(x[2] + x[3]^2)
+  h[3,3] <- 2*x[1]*exp(x[2] + x[3]^2)
+  h[1,2] <- h[2,1] <- exp(x[2] + x[3]^2)
+  h[1,3] <- h[3,1] <- 2*x[3]*exp(x[2] + x[3]^2)
+  h[2,3] <- h[3,2] <- 2*x[1]*x[3]*exp(x[2] + x[3]^2)
+  h
+}
+
+# step function
+step <- function(x){
+  if (x < 0){
+    x^2
+  } else {
+    1
+  }
+}
+stepder <- function(x){
+  if(x < 0){
+    2*x
+  } 
+  if (x > 0) {
+    0
+  } else {
+    NULL
+  }
+}
+stephess <- function(x){
+  if(x<0){
+    2
+  } 
+  if (x > 0) {
+    0
+  } else {
+    NULL
+  }
+}
 
 ### function testing ###
 k <- 0

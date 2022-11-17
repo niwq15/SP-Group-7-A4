@@ -92,7 +92,7 @@ newt <- function(theta, #this is our initial search point
   
   n_iter <- 1 # count the number of iterations 
   
-  while (n_iter < maxit ){ # iterate until maxit limit reached 
+  while (n_iter <= maxit ){ # iterate until maxit limit exceeded 
     
     theta2 <-  theta - hi %*% gradval #find the next step 
     
@@ -171,33 +171,21 @@ newt <- function(theta, #this is our initial search point
   }
   
   
+  #If the code gets to this part number of iterations has exceeded limit :( 
+  
+  warning("The maximum number of iterations has been exceeded")
   
   
+  #function returns the following parameters at the last theta position searched
+  output <- list ( f = f, #function value at the minimum
+                   theta = theta, #location of minimum
+                   iter = n_iter, #number of iterations required to reach min
+                   g = gradval, #gradient vector at the minimum 
+                   Hi = hi) #inverse hessian at the minimum 
+  return(output)
   
-  
-  
-  ### warning is max number of iteration exceeded 
-  
-  
-  
-  
-  
-  
-}
+}#end function 
 
-
-
-
-
-#Paste at the function end: 
-
-#check hessian is positive semi-definite at the minimum.
-#Code: 
-options(show.error.messages = TRUE, call. = FALSE)
-R <- try(chol(h) , stop("Hessian is not positive semi-definite at the minimum"))
-
-#Hessian Inverse hi - using cholesky (only works if chol works)
-hi <- chol2inv(chol(h))
 
 
 
@@ -210,6 +198,16 @@ hi <- chol2inv(chol(h))
 
 
 #########  TESTING ZONE ###########
+
+#check hessian is positive semi-definite at the minimum.
+
+#Code: 
+options(show.error.messages = TRUE, call. = FALSE)
+R <- try(chol(h) , stop("Hessian is not positive semi-definite at the minimum"))
+
+#Hessian Inverse hi - using cholesky (only works if chol works)
+hi <- chol2inv(chol(h))
+
 
 
 
@@ -356,6 +354,13 @@ tol=1e-8
 fscale = 1
 
 measure <- tol * (abs(f) + fscale ) 
+
+
+#### Testing Newt 
+newt(th, rb, gb, hb)
+
+
+
 
 
 

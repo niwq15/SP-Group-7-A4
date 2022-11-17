@@ -61,26 +61,22 @@ nullhess <- function(theta,grad,...,eps=1e-6){
 ## iter (the number of iterations taken to reach the minimum), g (the gradient vector at the minimum), Hi (the inverse of the Hessian matrix at the minimum).
 
 newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.half=20,eps=1e-6) {
-  f <- func(theta,...) #Store the function, evaluated at the first step theta
   
-  gradval <- grad(theta,...) # Store the gradient vector evaluated at the first step theta 
-  
-  #Check that the function and gradient are continuous (smooth)
+  f <- func(theta,...) ##store the function, evaluated at the first step theta
+  gradval <- grad(theta,...) ## store the gradient vector evaluated at the first step theta
+  ## Check whether the objective and derivatives are not finite at the initial theta (whether they are continuous or smooth)
+  ## The 'stop' function is used to jump out of the function and print an error message if a problem is detected
   if (is.finite(f)==FALSE) { #check the function at the start point is real 
     #When f is not real the function is not analytic. 
     stop("The objective function is not finite at the starting point. \n 
           The function is not analytic.")
-  }
-  
-  
+  }  
   if ( any( is.finite( gradval ) == FALSE ) ) { #check the gradient at the start is real 
     stop("The gradient is not finite at the starting point. \n 
           The function is not analytic.")
   }
-  
-  
-  #If the Hessian is not supplied, calculate it through finite difference methods 
-  
+  ## If both the objective and derivatives are finite at the initial theta, do the following steps
+  ## If the Hessian is not supplied, calculate it through finite difference methods 
   if (is.null(hess)) { #no hessian supplied 
     # calculate the hessian using the finite difference method 
     h <- nullhess(theta,grad,...,eps=1e-6)
@@ -88,43 +84,35 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     #if the hessian matrix is supplied then use it to calculate the matrix
     h <- hess(theta,...)
   }
-  
-  
-  #Minimization requires the hessian be positive (semi) definite 
+ 
+  ## Minimization requires the hessian be positive (semi) definite 
   options(show.error.messages = TRUE)
-  #Cholesky decomposition works only if matrix is positive definite 
-  #try Cholesky decomposition, if it fails console returns an error 
+  ## Cholesky decomposition works only if matrix is positive definite 
+  ## Try Cholesky decomposition, if it fails console returns an error 
   R <- try(chol(h) , stop("Hessian is not positive definite at the minimum", call. = FALSE))
-  #Hessian Inverse hi - using Cholesky (only works if chol works)
+  ## Hessian Inverse hi - using Cholesky (only works if chol works)
   hi <- chol2inv(chol(h))
-  
-  
-  
-  #Implement Newton's Method: 
-  # theta_(k+1) = theta_k - f''(theta_k)^(-1) * f'(theta_k)
-  # f''(theta_k)^(-1) = hi @ k th step 
-  # f'(theta_k) = gradval @ k th step 
-  # f(theta_k) = f @ k th step 
-  # theta_k = k th param val scanned
-  # theta_(k+1) = next theta point to scan (should be closer to the min)
-  
-  
+ 
+  ## Implement Newton's Method: 
+  ## theta_(k+1) = theta_k - f''(theta_k)^(-1) * f'(theta_k)
+  ## f''(theta_k)^(-1) = hi @ k th step 
+  ## f'(theta_k) = gradval @ k th step 
+  ## f(theta_k) = f @ k th step 
+  ## theta_k = k th param val scanned
+  ## theta_(k+1) = next theta point to scan (should be closer to the min)
+ 
   n_iter <- 1 # count the number of iterations 
-  
-  while (n_iter <= maxit ){ # iterate until maxit limit exceeded 
+  while (n_iter <= maxit ){ ## try at most 'maxit' iterations before giving up
     
-    theta2 <-  theta - hi %*% gradval #find the next step 
+    theta2 <-  theta - hi %*% gradval ##find the next step 
+    f2 <- func(theta2,...)  ##evaluate the fn at next step 
     
-    f2 <- func(theta2,...)                #evaluate the fn at next step 
-    
-    
-    # if the step increases the fn value rather than decreases, 
-    # half the step size in the same direction (overstepped the min)
+    ## Compare the values of the objective function for the updated theta and the initial theta
+    ## Case 1: if the step fails to reduce the objective we need to half the step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
     while ( f2 >= f ){ #iterate until fn val of next step is lower than current step 
       n_half <- n_half + 1 #counter goes up 
-      
-      #if we have hit the halving limit without finding the minimum
+      ## Stop if we have tried max.half step halvings, but still fail to reduce the objective
       if (n_half >= max.half ) { 
         #submit error warning to the console
         stop( paste( "The next step cannot be found. \n 
@@ -132,27 +120,18 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
               , call. = FALSE)
       } #else continue halving the step size
       
-      
-      #half the step size (again)
+      ## Half the step size (again)
       theta2 <-  theta - ( hi %*% gradval ) * ( 0.5 ^(n_half) )
-      #evaluate the function at the next step 
-      f2 <- func(theta2,...) 
-      
-    }#end while (step halving)
-    
-    
-    #Check half stepping does not lead to a non-finite objective function value
+      f2 <- func(theta2,...) ## evaluate the objective function value of the new theta 
+    }##end while (step halving)
+    ## Check half stepping does not lead to a non-finite objective function value
     if (is.finite(f2)==FALSE) { #check if the function is real 
       #When f is not real the function is not analytic. 
       stop("The function value at the new step is not real. \n 
           The function here is not analytic.")
     }
     
-    
-    
-    
-    
-    #Update the variables using the latest valid theta 
+    ## Update the variables using the latest valid theta 
     theta <-  theta2
     f <- f2
     

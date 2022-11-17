@@ -181,7 +181,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     #Test for convergence
     
     #if the gradient values are all zero (according to our convergence condition)
-    if (all( abs(gradval) <= tol * (abs(f) + fscale ) ) ) { 
+    if (all( abs(gradval) < tol * (abs(f) + fscale ) ) ) { 
       #function returns the following parameters
       output <- list ( f = f, #function value at the minimum
                        theta = theta, #location of minimum

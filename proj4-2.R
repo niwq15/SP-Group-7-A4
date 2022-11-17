@@ -269,6 +269,7 @@ f3 - f2
 hess <- array(c(3,0,1,0,3,0,1,0,3),dim=c(3,3))
 
 # save eigenvalues
+eigensV <- eigen(hess)$vectors
 eigensH <- eigen(hess)$values
 
 ## check if hessian is positive definite

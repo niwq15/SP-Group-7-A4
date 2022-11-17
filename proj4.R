@@ -178,12 +178,13 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     i <- 1
     while (i < maxit) { ## also iterate at most 100 times
       h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
-      eigensH <- eigen(h1)$values
-      if (all(eigensH > 0)){
-          h <- h1
-        break
-      }
-      i <- i + 1
+      eigensH <- eigen(h1)$values ##
+      if (all(eigensH > 0)){## if all the eigenvalues are positive
+          ## then it implies that the updated matrix is positive definite
+          h <- h1 ## store the updated Hessian matrix to 'h'
+        break##stop as we find one positive definite Hessian matrix
+      }## if the updated matrix is still not positive definite
+      i <- i + 1 ## repeat the above steps
     }
   }
   

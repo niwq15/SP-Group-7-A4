@@ -155,9 +155,12 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   # Minimization requires the hessian be positive (semi) definite :
   options(show.error.messages = TRUE) #console displays error messages 
   # Cholesky decomposition works only if matrix is positive definite 
-  # Try Cholesky decomposition, the Hessian is perturbed. 
 
-  ##ADD COMMENTS HERE 
+  ## The following part deals with the case that the Hessian matrix is not 
+  ## positive definite and in this case we perturb the Hessian matrix to be so
+  ## The approach is to add a multiple of the identity matrix and its matrix norm
+  ## to it, trying till we get a positive definite Hessian matrix (tested by 
+  ## Cholesky or eigen decomposition)  
   R <- try(chol(h), silent = TRUE)
   if (inherits(R, "try-error")) {
     i <- 1
@@ -241,7 +244,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     }
     
     
-    ## Test whether the hessian is still positive definite 
+    ## Test whether the hessian is still positive definite (same method as before)
     R <- try(chol(h), silent = TRUE)
     if (inherits(R, "try-error")) {
       i <- 1

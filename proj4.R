@@ -106,13 +106,17 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   while (n_iter <= maxit ){ # iterate until maxit limit exceeded 
    
     theta2 <-  theta - hi %*% gradval #find the next step 
-    f2 <- func(theta2,...)                #evaluate the fn at next step 
+    f2 <- func(theta2,...)  #evaluate the fn at next step 
+    ## Check whether the updated objective is finite
+      if (is.finite(f2)==FALSE) { 
+        stop("The objective function is not finite at some updated theta value. \n 
+          The function is not analytic.")
+      }
     # if the step increases the fn value rather than decreases, 
     # half the step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
     while ( f2 >= f ){ #iterate until fn val of next step is lower than current step 
       n_half <- n_half + 1 #counter goes up 
-      
       #if we have hit the halving limit without finding the minimum
       if (n_half >= max.half ) { 
         #submit error warning to the console
@@ -130,7 +134,6 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     #Update the variables using the latest valid theta 
     theta <-  theta2
     f <- f2
-    
     gradval <- grad(theta2,...) #next step's gradient vector 
     
     #next step's hessian matrix:
@@ -150,7 +153,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     
     #Test for convergence
     #if the gradient values are all zero (according to our convergence condition)
-    if (all( abs(gradval) <= tol * (abs(f) + fscale ) ) ) { 
+    bound <- tol * (abs(f) + fscale )
+    if (all( abs(gradval) <= bound ) ) { 
       #function returns the following parameters
       output <- list ( f = f, #function value at the minimum
                        theta = theta, #location of minimum

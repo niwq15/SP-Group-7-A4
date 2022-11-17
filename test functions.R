@@ -99,7 +99,7 @@ stepder <- function(x){
   if (x > 0) {
     0
   } else {
-    NULL
+    Inf
   }
 }
 stephess <- function(x){

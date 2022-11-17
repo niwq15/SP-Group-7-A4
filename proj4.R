@@ -94,7 +94,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   options(show.error.messages = TRUE)
   #Cholesky decomposition works only if matrix is positive definite 
   #try Cholesky decomposition, if it fails console returns an error 
-  R <- try(chol(h) , stop("Hessian is not positive semi-definite at the minimum", call. = FALSE))
+  R <- try(chol(h) , stop("Hessian is not positive definite at the minimum", call. = FALSE))
   #Hessian Inverse hi - using Cholesky (only works if chol works)
   hi <- chol2inv(chol(h))
   
@@ -116,11 +116,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
     theta2 <-  theta - hi %*% gradval #find the next step 
     
     f2 <- func(theta2,...)                #evaluate the fn at next step 
-    ## Check whether the updated objective is finite
-    if (is.finite(f2)==FALSE) { 
-      stop("The objective function is not finite at some updated theta value. \n 
-          The function is not analytic.")
-    }
+    
+    
     # if the step increases the fn value rather than decreases, 
     # half the step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
@@ -135,12 +132,25 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
               , call. = FALSE)
       } #else continue halving the step size
       
+      
       #half the step size (again)
       theta2 <-  theta - ( hi %*% gradval ) * ( 0.5 ^(n_half) )
       #evaluate the function at the next step 
       f2 <- func(theta2,...) 
       
     }#end while (step halving)
+    
+    
+    #Check half stepping does not lead to a non-finite objective function value
+    if (is.finite(f2)==FALSE) { #check if the function is real 
+      #When f is not real the function is not analytic. 
+      stop("The function value at the new step is not real. \n 
+          The function here is not analytic.")
+    }
+    
+    
+    
+    
     
     #Update the variables using the latest valid theta 
     theta <-  theta2
@@ -158,15 +168,20 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
       h <- hess(theta2, ...)
     }
     
+    
     #test that the hessian is still positive definite 
-    R <- try(chol(h) , stop(paste("Hessian is not positive semi-definite at step ", n_iter), call. = FALSE))
+    R <- try(chol(h) , stop(paste("Hessian is not positive definite at step ", n_iter), call. = FALSE))
     #Calculate the Hessian Inverse 'hi' - using Cholesky (only works if chol works)
     hi <- chol2inv(chol(h))
- 
+    
+    
+    
+    
+    
     #Test for convergence
     
     #if the gradient values are all zero (according to our convergence condition)
-    if (all( abs(gradval) < tol * (abs(f) + fscale ) ) ) { 
+    if (all( abs(gradval) <= tol * (abs(f) + fscale ) ) ) { 
       #function returns the following parameters
       output <- list ( f = f, #function value at the minimum
                        theta = theta, #location of minimum
@@ -176,7 +191,9 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
       return(output)
       
     }  
-
+    
+    
+    
     n_iter <- n_iter + 1 #iteration num count increases
   }
   
@@ -184,7 +201,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,max.h
   #If the code gets to this part number of iterations has exceeded limit :( 
   
   warning("The maximum number of iterations has been exceeded")
-
+  
+  
   #function returns the following parameters at the last theta position searched
   output <- list ( f = f, #function value at the minimum
                    theta = theta, #location of minimum

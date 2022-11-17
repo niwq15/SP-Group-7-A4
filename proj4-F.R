@@ -1,29 +1,52 @@
-## The 'newt' function has inputs, including theta, func, grad, hess
+#For convenience define a function to calculate the hessian via finite difference methods 
+#used in multiple places in the code 
+
+nullhess <- function(theta,grad,...,eps=1e-6){
+  gradval <- grad(theta,...) # calculate gradient using the input 'theta'
+  len <- length(gradval) # store gradient vector length
+  Hfd <- matrix(0, len,len) # intialise zeros matrix the size of the Hessian
+  
+  for (i in 1:len) {# calculate deriv w.r.t each param 
+  
+    th1 <- theta #store a copy of theta to operate on 
+    th1[i] <- th1[i] + eps  # increase th1[i] by eps
+    grad1 <- grad(th1,...) # compute gradient value at shifted theta
+    
+    #finite difference algebra: 
+    # (g(x_i + eps) - g(x_i))  /  ((x_i + eps ) - x_i)
+    # calculate the grad w.r.t theta_i 
+    Hfd[i,] <- (grad1 - gradval)/eps #ith row of the hessian 
+  }
+  return(Hfd) #output the finite diff hessian 
+}
+
+
+
+# The 'newt' function has inputs, including theta, func, grad, hess
 
 
 newt <- function(theta, #this is our initial search point 
                  func, #this is the functional form of the function
                  grad, #this is the functional form of the gradient 
                  hess=NULL, #this is the functional form of the hessian, 
-                            #when no hessian function is given this variables becomes NULL 
+                            #if no input is given this defaults to NULL 
                  ..., #allows newt to absorb the additional parameters required by 
                       #func, grad and hess
-                 tol=1e-8, #tolerance is the smallest difference between our steps permitted
-                 fscale=1, #fscale is the order of the function's values around the minimum
-                 maxit=100, #maxit is the maximum number of iterations of newton's method
-                            #carried out
-                 max.half=20, # the maximum number of times we half our step size
+                 tol=1e-8, #tolerance controls severity of convergence requirements
+                 fscale=1, #fscale is the order of the function val around the min
+                 maxit=100, #maxit is the maximum number of iterations of 
+                            #newton's method executed
+                 max.half=20, #the maximum number of times we half our step size
                               #while searching for a next step that returns a lower 
                               #function value
-                 eps=1e-6) {  #epsilon is the step in x_i used to calculate the derivative 
-                              #w.r.t. x_i using finite differences
+                 eps=1e-6) {  #epsilon is the step in theta_i used to calculate 
+                              #the derivative w.r.t. theta_i using finite differences
 
-  f <- func(theta,...) #Store the function, evaluated at the first setp theta
+  f <- func(theta,...) #Store the function, evaluated at the first step theta
   
   gradval <- grad(theta,...) # Store the gradient vector evaluated at the first step theta 
   
   #Check that the function and gradient are continuous (smooth)
-  #This is true when their values are finite 
   if (is.finite(f)==FALSE) { #check the function at the start point is real 
     #When f is not real the function is not analytic. 
     stop("The objective function is not finite at the starting point. \n 
@@ -40,48 +63,22 @@ newt <- function(theta, #this is our initial search point
   #If the Hessian is not supplied, calculate it through finite difference methods 
   
   if (is.null(hess)) { #no hessian supplied 
-    
-    len <- length(gradval) # length of the gradient vector 
-    
-    Hfd <- matrix(0, len,len) ## finite difference Hessian
-    
-    for (i in 1:length(theta)) {# loop over each variable basis 
-      
-      th1 <- theta #store each dimension of theta to operate on 
-      
-      th1[i] <- th1[i] + eps  # increase th1[i] by eps
-      
-      grad1 <- grad(th1,...) # compute new derivative value where a parameter i
-                             # has been shifted by epsilon 
-      
-      #approximating the derivative of the function with the finite difference method
-      # (g(x_i + eps) - g(x_i))  /  ((x_i + eps ) - x_i)
-      # All other variables x_j (j<>i) are kept the same 
-      Hfd[i,] <- (grad1 - gradval)/eps #ith row of the hessian 
-      #row 1 = derivatives of g(X) w.r.t x_1 
-    }
-    h <- Hfd #store the hessian
-  } else { #if the hessian matrix is supplied then store it locally 
-    h <- hess
+    # calculate the hessian using the finite difference method 
+    h <- nullhess(theta,grad,...,eps=1e-6)
+  } else { 
+    #if the hessian matrix is supplied then use it to calculate the matrix
+    h <- hess(theta,...)
   }
   
-  #find the inverse hessian (no matter the definiteness)
   
-  # Carry out QR decomposition of h (the hessian)
+  #Minimization requires the hessian be positive (semi) definite 
+  options(show.error.messages = TRUE)
+  #Cholesky decomposition works only if matrix is positive definite 
+  #try Cholesky decomposition, if it fails console returns an error 
+  R <- try(chol(h) , stop("Hessian is not positive semi-definite at the minimum", call. = FALSE))
+  #Hessian Inverse hi - using Cholesky (only works if chol works)
+  hi <- chol2inv(chol(h))
   
-  R <- qr.R(qr(h))  # get the triangle matrix R as the output 
-  Q <- qr.Q(qr(h))  # get the orthogonal matrix Q as the output 
-  
-  #Determine R inverse: 
-  #make an identity matrix with the same shape as R 
-  Identity_for_R <- diag(nrow = dim(R)[1])
-  # use backwards substitution to obtain R inverse 
-  # by solving for: R R^-1 = I
-  R_inv <- backsolve(R, Identity_for_R)
-  #Q inverse = Q transpose 
-  
-  #QR = h => hi = R_inv Q_transpose = inverse hessian 
-  hi <- R_inv %*% t(Q)
   
   
   #Implement Newton's Method: 
@@ -93,28 +90,80 @@ newt <- function(theta, #this is our initial search point
   # theta_(k+1) = next theta point to scan (should be closer to the min)
   
   
-  n_iter <- 0 # count the number of iterations 
+  n_iter <- 1 # count the number of iterations 
   
-  while (n_iter < maxit ){ # iteration until maximum iteration reached 
+  while (n_iter < maxit ){ # iterate until maxit limit reached 
+    
     theta2 <-  theta - hi %*% gradval #find the next step 
+    
     f2 <- func(theta2,...)                #evaluate the fn at next step 
     
-    #if the fn increases rather than decreases, half the step size in the same direction
+    
+    # if the step increases the fn value rather than decreases, 
+    # half the step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
-    while ( f2 > f ){ #iterate until fn val decreases 
+    while ( f2 > f ){ #iterate until fn val of next step is lower than current step 
       n_half <- n_half + 1 #counter goes up 
       
+      #if we have hit the halving limit without finding the minimum
+      if (n_half >= max.half ) { 
+        #submit error warning to the console
+        stop( paste( "The next step cannot be found. \n 
+                     The step size has been halved ", max.half, " times.")
+              , call. = FALSE)
+      } #else continue halving the step size
+      
+      #half the step size (again)
       theta2 <-  theta - ( hi %*% gradval ) * ( 0.5 ^(n_half) )
+      #evaluate the function at the next step 
       f2 <- func(theta2,...) 
       
-      if (n_half >= max.half ) { 
-        stop()}
-      
-      
+    }#end while (step halving)
+    
+    
+    
+    
+    
+    
+    #Update the variables using the latest valid theta 
+    theta <-  theta2
+    f <- f2
+    
+    gradval <- grad(theta2,...) #next step's gradient vector 
+    
+    #next step's hessian matrix:
+    if (is.null(hess)) { #no analytic hessian fn supplied  
+      # calculate the hessian of the next step using the finite difference method 
+      h <- nullhess(theta2,grad,...,eps=1e-6)
+    } else { 
+      #if the hessian matrix is supplied use it to calculate the hessian matrix
+      #of the next step 
+      h <- hess(theta2, ...)
     }
     
     
+    #test that the hessian is still positive definite 
+    R <- try(chol(h) , stop(paste("Hessian is not positive semi-definite at step ", n_iter), call. = FALSE))
+    #Calculate the Hessian Inverse 'hi' - using Cholesky (only works if chol works)
+    hi <- chol2inv(chol(h))
     
+    
+    
+    
+    
+    #Test for convergence
+    
+    #if the gradient values are all zero (according to our convergence condition)
+    if (all( abs(gradval) <= tol * (abs(f) + fscale ) ) ) { 
+      #function returns the following parameters
+      output <- list ( f = f, #function value at the minimum
+                       theta = theta, #location of minimum
+                       iter = n_iter, #number of iterations required to reach min
+                       g = gradval, #gradient vector at the minimum 
+                       Hi = hi) #inverse hessian at the minimum 
+      return(output)
+      
+    }  
     
     
     
@@ -124,6 +173,10 @@ newt <- function(theta, #this is our initial search point
   
   
   
+  
+  
+  
+  ### warning is max number of iteration exceeded 
   
   
   
@@ -156,10 +209,9 @@ hi <- chol2inv(chol(h))
 
 
 
-
-
-
 #########  TESTING ZONE ###########
+
+
 
 #Using TRY and STOP function to run the +ive hessian condition test 
 
@@ -248,6 +300,63 @@ if ( any(is.finite(gb(c(Inf, 0)))==FALSE) ) { #check the gradient at the start i
   stop("The gradient is not finite at the starting point. \n 
           The function is not analytic.")
 }
+
+
+##### Testing Hessian Finite Difference Function 
+
+
+th <- c(0,0)
+th1 <-c(1e-6,0)
+
+
+rb(th)
+gb(th)
+hb(th)
+
+gb(th)
+gb(th1)
+
+nullhess(th, gb)
+
+### from the results we can see the analytic and numerical outputs are similar 
+### error in element 1,2 comes from numerical error 
+
+
+### test max half step warning:
+
+if (1 >= 0) { 
+  stop( paste( "The next step cannot be found. \n  
+               The step size has been halved ", 5, " times.")
+        , call. = FALSE)
+}
+
+
+
+
+#### Testing tolerance condition 
+
+th <- c(0,0)
+
+
+f<-rb(th)
+gtest <- gb(th)
+hb(th)
+
+abs(gtest)
+
+any(abs(gtest) <= measure)
+
+abs(gtest) <= measure
+
+all(abs(gtest) <= measure)
+
+sum(abs(gtest) <= measure)
+prod(abs(gtest) <= measure)
+tol=1e-8
+fscale = 1
+
+measure <- tol * (abs(f) + fscale ) 
+
 
 
 

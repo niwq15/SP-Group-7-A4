@@ -48,15 +48,15 @@ hb <- function(th,k=2) {
 
 
 # wenqi function 1. R^2 -> R
-W1f <- function(x){
-  2*(x[2]-x[1]^2)^2 + (1-x[1])^2
+W1f <- function(x,k=10){
+  2*(x[2]-x[1]^2)^2 + (1-x[1])^2+k
 }
 
-W1g <- function(x){
+W1g <- function(x,k=10){
   c(-8*x[1]*x[2] + 8*x[1]^3 - 2 + 2*x[1], 4*(x[2] - x[1]^2))
 }
 
-W1h <- function(x){
+W1h <- function(x,k=10){
   h <- matrix(0,2,2)
   h[1,1] <- -8*x[2] + 24*x[1]^2 + 2
   h[2,2] <- 4

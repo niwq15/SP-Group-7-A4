@@ -18,6 +18,11 @@
 # testing and validation of the code 
 
 # Cameron:
+# created test functions to scrutinize newt()
+# created unused method to inverse hessian
+# altered the implementation of final hessian inverse calc to be a function
+# constructed an initial version of newt, with fewer bells and whistles
+# bug-fixing
 
 # Wenqi: 
 # created the function to approximate the Hessian matrix using finite difference method
@@ -152,31 +157,26 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   # Cholesky decomposition works only if matrix is positive definite 
   # Try Cholesky decomposition, the Hessian is perturbed. 
 
-  ## The following part deals with the case that the Hessian matrix is not 
-  ## positive definite and in this case we perturb the Hessian matrix to be so
-  ## The approach is to add a multiple of the identity matrix and its matrix norm
-  ## to it, trying till we get a positive definite Hessian matrix (tested by 
-  ## Cholesky or eigen decomposition)
+  ##ADD COMMENTS HERE 
   R <- try(chol(h), silent = TRUE)
   if (inherits(R, "try-error")) {
     i <- 1
     while (i < maxit) { ## also iterate at most 100 times
       h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
-      eigensH <- eigen(h1)$values 
-      if (all(eigensH > 0)){## if all the eigenvalues are positive
-          ## them it implies that the matrix is positive definite
-          h <- h1 ## store the updated Hessian matrix in 'h' 
+      eigensH <- eigen(h1)$values
+      if (all(eigensH > 0)){
+          h <- h1
         break
-      } ## if the matrix is still not positive definite
-      i <- i + 1 ## repeat the above steps
+      }
+      i <- i + 1
     }
   }
   
   ## Hessian Inverse hi - using Cholesky (only works if chol works)
   # if the positive definite hessian was not found in 100 pertubations stop 
   # searching 
-  hi <- try(chol2inv(chol(h)), stop("A positive definite Hessian was not found"),
-            call. = FALSE)
+  hi <- try(chol2inv(chol(h)), stop("A positive definite Hessian was not found",
+            call. = FALSE))
   
   
   ## Implement Newton's Method: 
@@ -240,7 +240,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
       h <- hess(theta2, ...)
     }
     
-    ## Test whether the hessian is still positive definite (same method as before)
+    
+    ## Test whether the hessian is still positive definite 
     R <- try(chol(h), silent = TRUE)
     if (inherits(R, "try-error")) {
       i <- 1
@@ -256,8 +257,8 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     }
     # Calculate the Hessian Inverse 'hi' using Cholesky 
     # (only works if chol works)
-    hi <- try(chol2inv(chol(h)), stop("A positive definite Hessian was not found"),
-              call. = FALSE)
+    hi <- try(chol2inv(chol(h)), stop("A positive definite Hessian was not found",
+              call. = FALSE))
     
     ## Test for convergence : 
     # If the gradient values are all approximately zero 

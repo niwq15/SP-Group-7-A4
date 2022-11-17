@@ -49,7 +49,13 @@ nullhess <- function(theta,grad,...,eps=1e-6){
 ## a lower function value before concluding that the step has failed to improve the objective), eps (the finite difference intervals that will be 
 ## used when Hessian function is not supplied). 
 
-## The 'newt' function 
+## The 'newt' function will apply the Newton's method to minimize the objective function and use Cholesky decomposition to calculate the inverse
+## of Hessian matrix. For each iteration, if the updated objective is no less than the initial objective, we will use step halvings and try 
+## at most 'max.half' times; if the update theta reduces the objective, we will try a convergence test and if such theta fails to pass it, repeat 
+## the steps until we find one with convergence or having tried 'maxit' times. 
+## The function will issue warnings for the following cases: 1. if the objective or derivatives are not finite at the initial theta; 2. if the method
+## fails to reduce the objective after trying 'max.half' step halvings; 3. if the step fails to find some theta with convergence after trying 'maxit' 
+## times; 4. if the Hessian matrix is not positive definite at convergence and during the steps. 
 
 ## The 'newt' function will return f (the value of the objective function at the minimum), theta (the value of the parameters at the minimum), 
 ## iter (the number of iterations taken to reach the minimum), g (the gradient vector at the minimum), Hi (the inverse of the Hessian matrix at the minimum).

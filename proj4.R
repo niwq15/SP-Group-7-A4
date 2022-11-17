@@ -61,9 +61,9 @@
 ## The 'nullhess' function approximates the Hessian matrix when its analytic
 ## form is not supplied. It does this using the finite difference method. 
 ## The 'nullhess' function has inputs: 
-    # theta : the start point of our search 
-    # grad : the gradient vector at the start point 
-    # eps : the size of the pertubation in theta 
+# theta : the start point of our search 
+# grad : the gradient vector at the start point 
+# eps : the size of the pertubation in theta 
 ## The output is the hessian matrix defined at theta
 nullhess <- function(theta,grad,...,eps=1e-6){ 
   gradval <- grad(theta,...) # calculate gradient vector at 'theta'
@@ -86,21 +86,21 @@ nullhess <- function(theta,grad,...,eps=1e-6){
 
 
 ## The 'newt' function has inputs:
-    # theta (a vector of initial values),
-    # func (the objective function to minimize), 
-    # grad (the gradient function),
-    # hess (the Hessian matrix function, 'hess = Null' by default when hessian 
-    #   function is not given),
-    # ... (any additional arguments of func, grad and hess except theta),
-    # tol (controls the convergence tolerance),
-    # fscale (an estimate of the magnitude of func near the optimum,
-    #   which will be used in convergence testing), 
-    # maxit (the maximum number of Newton iterations to try before giving up),
-    # max.half (the maximum number of times a step should be halved to find
-    #    a lower function value before concluding that the step has failed to 
-    #    improve the objective), 
-    # eps (the finite difference intervals that will be used when Hessian 
-    #   function is not supplied). 
+# theta (a vector of initial values),
+# func (the objective function to minimize), 
+# grad (the gradient function),
+# hess (the Hessian matrix function, 'hess = Null' by default when hessian 
+#   function is not given),
+# ... (any additional arguments of func, grad and hess except theta),
+# tol (controls the convergence tolerance),
+# fscale (an estimate of the magnitude of func near the optimum,
+#   which will be used in convergence testing), 
+# maxit (the maximum number of Newton iterations to try before giving up),
+# max.half (the maximum number of times a step should be halved to find
+#    a lower function value before concluding that the step has failed to 
+#    improve the objective), 
+# eps (the finite difference intervals that will be used when Hessian 
+#   function is not supplied). 
 
 ## The 'newt' function will apply the Newton's method to minimize the objective 
 ## function and use Cholesky decomposition to calculate the inverse of Hessian
@@ -113,27 +113,27 @@ nullhess <- function(theta,grad,...,eps=1e-6){
 ## times. 
 
 ##The function will issue warnings for the following cases:
-      ## 1. if the objective or derivatives are not finite at the initial theta;
-      ## 2. if the method fails to reduce the objective after trying 'max.half' 
-      ##    step halvings; 
-      ## 3. if the step fails to find some theta that satifies convergence after
-      ##    iterating newton's method 'maxit' times; 
-      ## 4. if the Hessian matrix is not positive definite at convergence and 
-      ##    during the steps. 
+## 1. if the objective or derivatives are not finite at the initial theta;
+## 2. if the method fails to reduce the objective after trying 'max.half' 
+##    step halvings; 
+## 3. if the step fails to find some theta that satifies convergence after
+##    iterating newton's method 'maxit' times; 
+## 4. if the Hessian matrix is not positive definite at convergence and 
+##    during the steps. 
 
 ## The 'newt' function will return :
-    # f (the value of the objective function at the minimum), 
-    # theta (the value of the parameters at the minimum), 
-    # iter (the number of iterations taken to reach the minimum), 
-    # g (the gradient vector at the minimum), 
-    # Hi (the inverse of the Hessian matrix at the minimum).
+# f (the value of the objective function at the minimum), 
+# theta (the value of the parameters at the minimum), 
+# iter (the number of iterations taken to reach the minimum), 
+# g (the gradient vector at the minimum), 
+# Hi (the inverse of the Hessian matrix at the minimum).
 
 newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
                  max.half=20,eps=1e-6) {
   
   f <- func(theta,...) # store the function, evaluated at the first step theta
   gradval <- grad(theta,...) # store the gradient vector evaluated at the first
-                              # step theta
+  # step theta
   
   # Check the objective and derivatives are real at the initial theta
   # and therefore that the function is continuous.
@@ -146,7 +146,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
           The function is not analytic.")
   }  
   if ( any( is.finite( gradval ) == FALSE ) ) { # check the gradient at the start
-                                                # is real 
+    # is real 
     stop("The gradient is not finite at the starting point. \n 
           The function is not analytic.")
   }
@@ -167,7 +167,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   # Minimization requires the hessian be positive (semi) definite :
   options(show.error.messages = TRUE) #console displays error messages 
   # Cholesky decomposition works only if matrix is positive definite 
-
+  
   
   ## When the Hessian matrix is not positive definite we perturb the Hessian
   ## matrix until it is. To do this, add a the identity matrix, scaled by the 
@@ -179,23 +179,23 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   R <- try(chol(h), silent = TRUE)
   if (inherits(R, "try-error")) {
     i <- 1
-    while (i < maxit) { ## also iterate at most 100 times
-      h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
-      eigensH <- eigen(h1)$values ##
+    while (i < maxit) { ## also iterate at most maxit times
+      h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) # perturb the h
+      eigensH <- eigen(h1)$values ## find the eigenvalues 
       if (all(eigensH > 0)){## if all the eigenvalues are positive
-          ## then it implies that the updated matrix is positive definite
-          h <- h1 ## store the updated Hessian matrix to 'h'
-        break##stop as we find one positive definite Hessian matrix
+        ## then it implies that the updated matrix is positive definite
+        h <- h1 ## store the updated Hessian matrix to 'h'
+        break ## stop, we have found a positive definite Hessian matrix
       }## if the updated matrix is still not positive definite
       i <- i + 1 ## repeat the above steps
     }
   }
   
   ## Hessian Inverse hi - using Cholesky (only works if chol works)
-  # if the positive definite hessian was not found in 100 pertubations stop 
+  # if the positive definite hessian was not found in maxit pertubations stop 
   # searching 
   hi <- try(chol2inv(chol(h)), stop("A positive definite Hessian was not found",
-            call. = FALSE))
+                                    call. = FALSE))
   
   
   ## Implement Newton's Method: 
@@ -220,7 +220,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     ## step size in the same direction (overstepped the min)
     n_half <- 0  # counter for times steps halved 
     while ( f2 >= f ){# iterate until fn val of next step (f2) is lower than 
-                      # that of the current step (f)
+      # that of the current step (f)
       n_half <- n_half + 1 # counter goes up 
       # Stop if we have tried max.half step halvings, and failed to reduce the 
       # objective
@@ -260,15 +260,16 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     }
     
     
-    ## Test whether the hessian is still positive definite (same method as before)
+    ## Test whether the hessian is still positive definite 
+    # if not the the hessian is perturbed as before 
     R <- try(chol(h), silent = TRUE)
     if (inherits(R, "try-error")) {
       i <- 1
       while (i < maxit) {
-        h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) 
+        h1 <- h+(10^(-7+i))*norm(h)*diag(length(gradval)) # perturb the hessian 
         eigensH <- eigen(h1)$values
         if (all(eigensH > 0)){
-            h <- h1
+          h <- h1 #update the hessian 
           break
         }
         i <- i + 1
@@ -277,7 +278,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     # Calculate the Hessian Inverse 'hi' using Cholesky 
     # (only works if chol works)
     hi <- try(chol2inv(chol(h)), stop("A positive definite Hessian was not found",
-              call. = FALSE))
+                                      call. = FALSE))
     
     ## Test for convergence : 
     # If the gradient values are all approximately zero 
@@ -295,7 +296,7 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
     
     ## If the new theta reduces the objective but fails to pass the convergence 
     ## test, repeat the procedure above
-
+    
     n_iter <- n_iter + 1 # iteration counter increases
   }
   # If this part of the method is reached, the number of iterations

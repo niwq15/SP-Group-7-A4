@@ -180,7 +180,9 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   ## The positive definiteness of the Hessian matrix at theta is tested by
   ## Cholesky and eigen decomposition.   
   R <- try(chol(h), silent = TRUE)
-  if (inherits(R, "try-error")) {
+  ## 'inherit...' returns TRUE if 'h' is not positive definite and in the case,
+  ## R will return "try-error".
+  if (inherits(R, "try-error")) {## need to perturb 'h'
     i <- 1
     while (i < maxit) { ## also iterate at most maxit times
       h1 <- h + (10^(-7+i))*norm(h)*diag(length(gradval)) # perturb the h
@@ -318,4 +320,3 @@ newt <- function(theta,func,grad,hess=NULL,...,tol=1e-8,fscale=1,maxit=100,
   return(output) # return the list 
   
 }#end function 
-
